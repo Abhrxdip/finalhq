@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.vscode/**'
+      - '.idea/**'
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  HackQuest-contracts-validate:
+    name: Run HackQuest-contracts release
+    secrets: inherit
+    uses: ./.github/workflows/HackQuest-contracts-ci.yaml
+
+  HackQuest-contracts-release:
+    name: Run HackQuest-contracts release
+    secrets: inherit
+    uses: ./.github/workflows/HackQuest-contracts-cd.yaml
+    needs: HackQuest-contracts-validate
+
+  HackQuest-frontend-validate:
+    name: Run HackQuest-frontend release
+    secrets: inherit
+    uses: ./.github/workflows/HackQuest-frontend-ci.yaml
+
+  HackQuest-frontend-release:
+    name: Run HackQuest-frontend release
+    secrets: inherit
+    uses: ./.github/workflows/HackQuest-frontend-cd.yaml
+    needs: HackQuest-frontend-validate

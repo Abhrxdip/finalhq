@@ -1,0 +1,18 @@
+{
+  "folders": [
+    {
+      "path": "./backend",
+      "name": "backend"
+    },
+    {
+      "path": "./blockchain",
+      "name": "blockchain"
+    }
+  ],
+  "settings": {
+    "dotenv.enableAutocloaking": false
+  },
+  "extensions": {
+    "recommendations": ["joshx.workspace-terminals"]
+  }
+}

@@ -1,0 +1,25 @@
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!**/.env.example
+!**/.env.template
+
+# Build/runtime artifacts
+dist/
+build/
+coverage/
+.cache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/editor
+.DS_Store
+.vscode/

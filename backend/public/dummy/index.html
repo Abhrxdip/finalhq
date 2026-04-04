@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HackQuest Dummy Wallet Test</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <section class="hero">
+        <h1>HackQuest Testnet Dummy Frontend</h1>
+        <p>Use this page to validate backend + blockchain integration quickly.</p>
+      </section>
+
+      <section class="card">
+        <h2>Wallet</h2>
+        <div class="row">
+          <button id="connectBtn">Connect Pera Wallet</button>
+          <button id="disconnectBtn" class="ghost">Disconnect</button>
+        </div>
+        <label>
+          Wallet Address
+          <input id="walletInput" placeholder="Paste or connect a TestNet wallet" />
+        </label>
+        <small id="walletStatus">No wallet connected.</small>
+      </section>
+
+      <section class="card">
+        <h2>Deploy XP Registry</h2>
+        <button id="deployBtn">POST /api/algo/deploy</button>
+        <small>Requires admin mnemonic in backend env.</small>
+      </section>
+
+      <section class="card">
+        <h2>Mint NFT</h2>
+        <label>
+          NFT Name
+          <input id="nftNameInput" value="Bug Slayer" />
+        </label>
+        <label>
+          IPFS Hash
+          <input id="ipfsHashInput" placeholder="bafy..." />
+        </label>
+        <button id="mintBtn">POST /api/algo/mint-nft</button>
+      </section>
+
+      <section class="card">
+        <h2>Record XP</h2>
+        <label>
+          XP
+          <input id="xpInput" type="number" value="100" min="1" />
+        </label>
+        <label>
+          Quest ID
+          <input id="questIdInput" value="quest-demo-1" />
+        </label>
+        <label>
+          App ID (optional)
+          <input id="appIdInput" type="number" placeholder="Set from deploy result" />
+        </label>
+        <button id="recordBtn">POST /api/algo/record-xp</button>
+      </section>
+
+      <section class="card">
+        <h2>Read Data</h2>
+        <div class="row">
+          <button id="assetsBtn">GET /api/algo/user-assets/:wallet</button>
+          <button id="xpBtn">GET /api/algo/user-xp/:wallet</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Verify Transaction</h2>
+        <label>
+          Transaction ID
+          <input id="txIdInput" placeholder="Paste transaction id" />
+        </label>
+        <button id="verifyBtn">GET /api/algo/verify-tx/:txId</button>
+      </section>
+
+      <section class="card">
+        <h2>Output</h2>
+        <pre id="output">Ready</pre>
+      </section>
+    </main>
+
+    <script src="https://unpkg.com/@perawallet/connect/dist/perawalletconnect.umd.min.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

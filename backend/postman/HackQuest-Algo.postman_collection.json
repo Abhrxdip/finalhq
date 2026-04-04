@@ -1,0 +1,186 @@
+{
+  "info": {
+    "name": "HackQuest Algo API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for HackQuest backend blockchain endpoints"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Algo - Deploy XP Registry",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/algo/deploy",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "algo",
+            "deploy"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Algo - Mint NFT",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userWallet\": \"{{wallet}}\",\n  \"nftName\": \"Bug Slayer\",\n  \"ipfsHash\": \"{{ipfsHash}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/algo/mint-nft",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "algo",
+            "mint-nft"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Algo - Record XP",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userWallet\": \"{{wallet}}\",\n  \"xp\": 100,\n  \"questId\": \"quest-demo-1\",\n  \"appId\": {{appId}}\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/algo/record-xp",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "algo",
+            "record-xp"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Algo - Get User Assets",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/algo/user-assets/{{wallet}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "algo",
+            "user-assets",
+            "{{wallet}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Algo - Get User XP",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/algo/user-xp/{{wallet}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "algo",
+            "user-xp",
+            "{{wallet}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Algo - Verify TX",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/algo/verify-tx/{{txId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "algo",
+            "verify-tx",
+            "{{txId}}"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000"
+    },
+    {
+      "key": "wallet",
+      "value": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAY5HFKQ"
+    },
+    {
+      "key": "ipfsHash",
+      "value": "bafkreigh2akiscaildc4u5n2v6clvvmh6jyl7f7xoe4w4f4k6slprj6gny"
+    },
+    {
+      "key": "appId",
+      "value": "123456"
+    },
+    {
+      "key": "txId",
+      "value": "REPLACE_WITH_TX_ID"
+    }
+  ]
+}
