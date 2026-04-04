@@ -167,6 +167,10 @@ cython_debug/
 
 # NPM
 node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Monorepo layout (backend + blockchain)
 backend/.git/
@@ -174,6 +178,21 @@ blockchain/.git/
 backend/node_modules/
 backend/frontend/node_modules/
 blockchain/contracts-ts/node_modules/
+
+# Next.js frontendhq app
+frontendhq/.git/
+frontendhq/node_modules/
+frontendhq/.next/
+frontendhq/out/
+frontendhq/.turbo/
+frontendhq/.vercel/
+frontendhq/playwright-report/
+frontendhq/test-results/
+frontendhq/coverage/
+frontendhq/.env.local
+frontendhq/.env.development.local
+frontendhq/.env.test.local
+frontendhq/.env.production.local
 
 # Frontend local env files
 backend/frontend/.env

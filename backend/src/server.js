@@ -4,15 +4,26 @@ const http = require('http');
 const app = require('./app');
 const db = require('./db');
 const { initSocket } = require('./sockets');
+const authService = require('./services/authService');
 
 const port = Number(process.env.PORT || 4000);
 
 const server = http.createServer(app);
 initSocket(server);
 
-server.listen(port, () => {
-  console.log(`[HackQuest] Server running on port ${port}`);
-});
+const startServer = async () => {
+  try {
+    await authService.ensureAuthSchema();
+    server.listen(port, () => {
+      console.log(`[HackQuest] Server running on port ${port}`);
+    });
+  } catch (error) {
+    console.error('[HackQuest] Failed to initialize server', error);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 const shutdown = async (signal) => {
   console.log(`[HackQuest] Received ${signal}. Shutting down...`);

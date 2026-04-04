@@ -9,7 +9,11 @@ const strictMode = process.env.ALGO_STRICT === 'true';
 const defaultNetwork = process.env.ALGO_NETWORK || process.env.ALGORAND_NETWORK || 'testnet';
 const pythonBin = process.env.PYTHON_BIN || 'python';
 const scriptTimeoutMs = Number(process.env.PYTHON_TIMEOUT_MS || 60000);
-const scriptsDir = process.env.ALGO_SCRIPTS_DIR || path.resolve(__dirname, '../../..', 'blockchain', 'scripts');
+const bundledScriptsDir = path.resolve(__dirname, '../../blockchain_py/scripts');
+const monorepoScriptsDir = path.resolve(__dirname, '../../..', 'blockchain', 'scripts');
+const scriptsDir =
+  process.env.ALGO_SCRIPTS_DIR ||
+  (fs.existsSync(bundledScriptsDir) ? bundledScriptsDir : monorepoScriptsDir);
 const defaultIpfsHash =
   process.env.DEFAULT_NFT_IPFS_HASH ||
   'bafkreihdwdcefgh4dqkjv67uzcmw7ojee6xedzdetojuzjevtenxquvyku';

@@ -1,0 +1,20 @@
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Outfit:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+@import "../styles/theme.css";
+@import "tw-animate-css";
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #050a05;
+  color: #e8f5e8;
+  font-family: "Outfit", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}

@@ -1,9 +1,12 @@
 const express = require('express');
 const blockchainController = require('../controllers/blockchainController');
+const { requireAuth, requireAdmin } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
-router.post('/deploy', blockchainController.deployXpRegistry);
+router.use(requireAuth);
+
+router.post('/deploy', requireAdmin, blockchainController.deployXpRegistry);
 router.post('/mint-nft', blockchainController.mintNft);
 router.post('/record-xp', blockchainController.recordXp);
 router.get('/user-assets/:wallet', blockchainController.getUserAssets);
