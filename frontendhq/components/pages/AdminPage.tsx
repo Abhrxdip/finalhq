@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
-import { LayoutDashboard, Zap, FileText, Award, Trophy, Users, Settings, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Zap, FileText, Award, Trophy, Users, Settings, CheckCircle, XCircle, ExternalLink, Search } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type LeaderboardView, type QuestView } from '@/lib/services/hackquest.service';
+import { HackquestService, type AdminUserInfo, type LeaderboardView, type QuestView } from '@/lib/services/hackquest.service';
 
 const adminNavItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -51,6 +51,9 @@ export function AdminPage() {
   const [mintProgress, setMintProgress] = useState(0);
   const [isMinting, setIsMinting] = useState(false);
   const [chainActionMessage, setChainActionMessage] = useState<string | null>(null);
+  const [userLookup, setUserLookup] = useState('');
+  const [lookupMessage, setLookupMessage] = useState<string | null>(null);
+  const [selectedUserInfo, setSelectedUserInfo] = useState<AdminUserInfo | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -82,6 +85,9 @@ export function AdminPage() {
           <h1 style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff', margin: '0 0 10px' }}>You are signed in as a non-admin account</h1>
           <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '16px' }}>
             To deploy smart contracts from this UI, register/login with an email configured in backend ADMIN_EMAILS.
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: '13px', marginBottom: '16px' }}>
+            User accounts are intentionally limited to self-scope features: personal profile, wallet, quest activity, and settings.
           </p>
           <button onClick={() => navigate('/dashboard')} style={{ height: '40px', backgroundColor: colors.neon500, color: colors.bgBase, borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '13px', fontWeight: 700, cursor: 'pointer', padding: '0 16px' }}>
             Back to Dashboard
@@ -150,6 +156,25 @@ export function AdminPage() {
 
     const txId = (result as Record<string, unknown>).txId;
     setChainActionMessage(typeof txId === 'string' ? `XP recorded on-chain. tx: ${txId}` : 'XP recorded (tx pending).');
+  };
+
+  const handleLookupUser = async () => {
+    const lookup = userLookup.trim();
+    if (!lookup) {
+      setLookupMessage('Enter a username to query user intelligence.');
+      setSelectedUserInfo(null);
+      return;
+    }
+
+    const details = await HackquestService.getUserInfoForAdmin(lookup);
+    if (!details) {
+      setLookupMessage('User lookup failed. Ensure admin privileges and a valid username.');
+      setSelectedUserInfo(null);
+      return;
+    }
+
+    setSelectedUserInfo(details);
+    setLookupMessage(`Audit log: ${details.username} data viewed by admin at ${new Date().toLocaleTimeString()}.`);
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -224,6 +249,27 @@ export function AdminPage() {
                 <button onClick={handleRecordDemoXp} style={{ height: '44px', backgroundColor: colors.purple500, color: '#fff', borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', padding: '0 20px' }}>Record +25 XP</button>
                 <button style={{ height: '44px', backgroundColor: 'transparent', color: colors.textPrimary, borderRadius: '10px', border: `1px solid ${colors.borderDefault}`, fontFamily: fonts.outfit, fontSize: '14px', cursor: 'pointer', padding: '0 20px' }}>Broadcast Message</button>
                 <button style={{ height: '44px', backgroundColor: 'transparent', color: colors.red500, borderRadius: '10px', border: 'rgba(255,68,68,0.3) 1px solid', fontFamily: fonts.outfit, fontSize: '14px', cursor: 'pointer', padding: '0 20px' }}>Pause Event</button>
+              </div>
+
+              <div style={{ marginTop: '18px', backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '12px', padding: '14px 16px' }}>
+                <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.orange500, marginBottom: '8px' }}>
+                  ACCESS POLICY SNAPSHOT
+                </div>
+                <div style={{ fontSize: '13px', color: colors.textSecondary, lineHeight: 1.6 }}>
+                  Admins have extended controls, including cross-user intelligence lookup, moderation, and chain operations. Regular users are restricted to their own profile, wallet, and quest scope.
+                </div>
+                <div style={{ marginTop: '10px', display: 'grid', gap: '6px' }}>
+                  {[
+                    'View operational user info by username (email, wallet, rank, XP, role, flags)',
+                    'Approve or reject submissions and control review queue outcomes',
+                    'Trigger XP registry deploy and record XP transactions',
+                    'Initiate NFT minting for approved submissions',
+                  ].map((feature) => (
+                    <div key={feature} style={{ fontSize: '12px', color: colors.textMuted }}>
+                      • {feature}
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {chainActionMessage && (
@@ -375,6 +421,82 @@ export function AdminPage() {
           {activeSection === 'participants' && (
             <div>
               <h2 style={{ fontFamily: fonts.orbitron, fontSize: '20px', fontWeight: 700, color: '#fff', margin: '0 0 20px' }}>Participants ({leaderboardList.length})</h2>
+
+              <div style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', padding: '16px', marginBottom: '14px' }}>
+                <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.neon500, marginBottom: '8px' }}>
+                  ADMIN USER ACCESS HUB
+                </div>
+                <div style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '12px', lineHeight: 1.6 }}>
+                  Admins can access any user's operational info by username from this section. Access is role-gated and each lookup is audit logged.
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <input
+                    value={userLookup}
+                    onChange={(event) => setUserLookup(event.target.value)}
+                    placeholder="Enter username (example: algo_phoenix)"
+                    style={{
+                      flex: 1,
+                      minWidth: '260px',
+                      height: '38px',
+                      backgroundColor: 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${colors.borderSubtle}`,
+                      borderRadius: '10px',
+                      color: colors.textPrimary,
+                      fontFamily: fonts.outfit,
+                      fontSize: '13px',
+                      padding: '0 12px',
+                      outline: 'none',
+                    }}
+                  />
+                  <button onClick={handleLookupUser} style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '38px', backgroundColor: colors.neon500, color: colors.bgBase, borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '13px', fontWeight: 700, cursor: 'pointer', padding: '0 16px' }}>
+                    <Search size={14} /> Lookup User
+                  </button>
+                </div>
+
+                {lookupMessage && (
+                  <div style={{ marginTop: '10px', fontFamily: fonts.mono, fontSize: '10px', color: colors.blue500, letterSpacing: '1px' }}>
+                    {lookupMessage}
+                  </div>
+                )}
+
+                {selectedUserInfo && (
+                  <div style={{ marginTop: '12px', backgroundColor: 'rgba(0,255,65,0.05)', border: `1px solid ${colors.neon300}`, borderRadius: '12px', padding: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(120px, 1fr))', gap: '10px' }}>
+                      <div>
+                        <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.textMuted }}>USERNAME</div>
+                        <div style={{ fontSize: '13px', color: colors.textPrimary }}>{selectedUserInfo.username}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.textMuted }}>EMAIL</div>
+                        <div style={{ fontSize: '13px', color: colors.textPrimary }}>{selectedUserInfo.email}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.textMuted }}>WALLET</div>
+                        <div style={{ fontSize: '13px', color: colors.textPrimary }}>{selectedUserInfo.walletAddress.slice(0, 10)}...{selectedUserInfo.walletAddress.slice(-4)}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.textMuted }}>ROLE</div>
+                        <div style={{ fontSize: '13px', color: selectedUserInfo.role === 'admin' ? colors.orange500 : colors.neon500 }}>{selectedUserInfo.role.toUpperCase()}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.textMuted }}>XP / RANK</div>
+                        <div style={{ fontSize: '13px', color: colors.neon500 }}>⚡ {selectedUserInfo.totalXp.toLocaleString()} · #{selectedUserInfo.rank}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.textMuted }}>LAST ACTIVE</div>
+                        <div style={{ fontSize: '13px', color: colors.textPrimary }}>{selectedUserInfo.lastActive}</div>
+                      </div>
+                    </div>
+                    {selectedUserInfo.flags.length > 0 && (
+                      <div style={{ marginTop: '10px', fontFamily: fonts.mono, fontSize: '10px', color: colors.orange500 }}>
+                        Flags: {selectedUserInfo.flags.join(', ')}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', overflow: 'hidden' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr 100px 120px 80px', padding: '12px 20px', borderBottom: `1px solid ${colors.borderDefault}` }}>
                   {['PLAYER', 'EMAIL', 'LEVEL', 'XP', 'STATUS'].map((h) => (
