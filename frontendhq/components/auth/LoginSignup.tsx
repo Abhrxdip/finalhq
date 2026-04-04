@@ -11,6 +11,7 @@ import {
   User,
   Github,
   Check,
+  Shield,
 } from "lucide-react";
 import { InputField } from "./InputField";
 import { HackquestService } from "@/lib/services/hackquest.service";
@@ -139,6 +140,7 @@ interface LoginSignupProps {
 
 export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
   const navigate = useNavigate();
+  const demoAdmin = HackquestService.getDemoAdminCredentials();
   const [activeTab, setActiveTab] = useState<"login" | "signup">(initialTab);
 
   // Shared form state
@@ -153,6 +155,8 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
   const [btnHovered, setBtnHovered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [accessMode, setAccessMode] = useState<"user" | "admin">("user");
+  const [adminAccessKey, setAdminAccessKey] = useState("");
 
   const strength = getPasswordStrength(password);
   const strengthInfo = STRENGTH[strength] || STRENGTH[0];
@@ -222,16 +226,34 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
       return;
     }
 
-    setIsSubmitting(true);
-    const session = await HackquestService.login({ email, password });
-    setIsSubmitting(false);
+    const isDemoAdminAttempt =
+      email.trim().toLowerCase() === demoAdmin.email &&
+      password === demoAdmin.password;
 
-    if (!session) {
-      setAuthError("Login failed. Check your credentials and backend availability.");
+    if (accessMode === "admin" && !adminAccessKey && !isDemoAdminAttempt) {
+      setAuthError("Admin access key is required for admin login.");
       return;
     }
 
-    navigate("/dashboard");
+    setIsSubmitting(true);
+    const session = await HackquestService.login({
+      email,
+      password,
+      requestedRole: accessMode,
+      adminAccessKey: accessMode === "admin" ? adminAccessKey || undefined : undefined,
+    });
+    setIsSubmitting(false);
+
+    if (!session) {
+      setAuthError(
+        accessMode === "admin"
+          ? "Admin login failed. Use an approved admin email and valid access key, or use demo admin credentials."
+          : "Login failed. Check your credentials and backend availability."
+      );
+      return;
+    }
+
+    navigate(session.authUser?.role === "admin" ? "/admin" : "/dashboard");
   };
 
   const handleSignup = async () => {
@@ -422,6 +444,110 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
             >
               {/* Login Form */}
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                <div
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(0,255,65,0.12)",
+                    borderRadius: 12,
+                    padding: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 10,
+                      fontFamily: "'Share Tech Mono', monospace",
+                      fontSize: 11,
+                      letterSpacing: "1px",
+                      color: MUTED,
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    <Shield size={14} />
+                    Access Mode
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {([
+                      { key: "user", label: "User Workspace" },
+                      { key: "admin", label: "Admin Console" },
+                    ] as const).map((mode) => (
+                      <button
+                        key={mode.key}
+                        type="button"
+                        onClick={() => {
+                          resetAuthError();
+                          setAccessMode(mode.key);
+                        }}
+                        style={{
+                          height: 36,
+                          borderRadius: 8,
+                          border:
+                            accessMode === mode.key
+                              ? "1px solid rgba(0,255,65,0.35)"
+                              : "1px solid rgba(255,255,255,0.08)",
+                          background:
+                            accessMode === mode.key ? "rgba(0,255,65,0.12)" : "rgba(255,255,255,0.01)",
+                          color: accessMode === mode.key ? NEON : "rgba(255,255,255,0.75)",
+                          fontFamily: "Outfit, sans-serif",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {mode.label}
+                      </button>
+                    ))}
+                  </div>
+                  {accessMode === "admin" && (
+                    <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
+                      <div
+                        style={{
+                          fontFamily: "'Share Tech Mono', monospace",
+                          fontSize: 10,
+                          letterSpacing: "1px",
+                          color: "rgba(255,255,255,0.82)",
+                        }}
+                      >
+                        Demo ID: {demoAdmin.email}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: "'Share Tech Mono', monospace",
+                          fontSize: 10,
+                          letterSpacing: "1px",
+                          color: "rgba(255,255,255,0.82)",
+                        }}
+                      >
+                        Demo Password: {demoAdmin.password}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          resetAuthError();
+                          setEmail(demoAdmin.email);
+                          setPassword(demoAdmin.password);
+                          setAdminAccessKey(demoAdmin.accessKey);
+                        }}
+                        style={{
+                          height: 32,
+                          borderRadius: 8,
+                          border: "1px solid rgba(0,255,65,0.3)",
+                          background: "rgba(0,255,65,0.1)",
+                          color: NEON,
+                          fontFamily: "Outfit, sans-serif",
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Use Demo Admin Login
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <InputField
                   type="email"
                   placeholder="Email address"
@@ -438,6 +564,18 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                   leftIcon={<Lock size={18} />}
                   rightElement={eyeBtn(showPassword, setShowPassword)}
                 />
+                {accessMode === "admin" && (
+                  <InputField
+                    type="password"
+                    placeholder="Admin access key"
+                    value={adminAccessKey}
+                    onChange={(e) => {
+                      resetAuthError();
+                      setAdminAccessKey(e.target.value);
+                    }}
+                    leftIcon={<Shield size={18} />}
+                  />
+                )}
               </div>
 
               {/* Forgot Password */}
@@ -479,6 +617,51 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
 
               <Divider />
               <SocialButtons />
+
+              <div
+                style={{
+                  marginTop: 16,
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(0,255,65,0.12)",
+                  borderRadius: 12,
+                  padding: 12,
+                  display: "grid",
+                  gap: 10,
+                }}
+              >
+                <div>
+                  <div
+                    style={{
+                      fontFamily: "'Share Tech Mono', monospace",
+                      fontSize: 10,
+                      letterSpacing: "1px",
+                      color: NEON,
+                      marginBottom: 4,
+                    }}
+                  >
+                    ADMIN EXTRA FEATURES
+                  </div>
+                  <div style={{ fontFamily: "Outfit, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.8)" }}>
+                    Full moderation queue, on-chain XP registry controls, and user intelligence lookup from Admin Panel / Participants.
+                  </div>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontFamily: "'Share Tech Mono', monospace",
+                      fontSize: 10,
+                      letterSpacing: "1px",
+                      color: "#ffb86b",
+                      marginBottom: 4,
+                    }}
+                  >
+                    USER LIMITED FEATURES
+                  </div>
+                  <div style={{ fontFamily: "Outfit, sans-serif", fontSize: 12, color: "rgba(255,255,255,0.8)" }}>
+                    Users can manage only their own quests, wallet, and profile; admin-only routes and cross-user data access stay blocked.
+                  </div>
+                </div>
+              </div>
 
               <div
                 style={{

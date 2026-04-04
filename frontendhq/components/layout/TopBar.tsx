@@ -24,6 +24,7 @@ const topBarNavPaths = [
 
 export function TopBar() {
   const [search, setSearch] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [xp, setXp] = useState(0);
   const [avatarInitials, setAvatarInitials] = useState('PL');
   const [profilePath, setProfilePath] = useState('/profile/player');
@@ -34,8 +35,13 @@ export function TopBar() {
     let active = true;
 
     (async () => {
-      const profile = await HackquestService.getCurrentUserProfile();
+      const [profile, session] = await Promise.all([
+        HackquestService.getCurrentUserProfile(),
+        HackquestService.getAuthMe(),
+      ]);
       if (!active || !profile) return;
+
+      setIsAdmin(session.authUser?.role === 'admin');
 
       setXp(profile.totalXp);
       setProfilePath(`/profile/${profile.username}`);
@@ -57,6 +63,14 @@ export function TopBar() {
       active = false;
     };
   }, []);
+
+  const visibleTopBarItems = React.useMemo(
+    () =>
+      appNavItems.filter(
+        (item) => topBarNavPaths.includes(item.path) && (item.path !== '/admin' || isAdmin)
+      ),
+    [isAdmin]
+  );
 
   const handleLogout = React.useCallback(async () => {
     await HackquestService.logout();
@@ -124,9 +138,7 @@ export function TopBar() {
           msOverflowStyle: 'none',
         }}
       >
-        {appNavItems
-          .filter((item) => topBarNavPaths.includes(item.path))
-          .map((item) => {
+        {visibleTopBarItems.map((item) => {
           const isProfilePath = item.path.startsWith('/profile/');
           const isActive = isProfilePath
             ? location.pathname.startsWith('/profile/')

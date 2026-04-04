@@ -9,6 +9,7 @@ import { HackquestService } from '@/lib/services/hackquest.service';
 
 export function Sidebar() {
   const location = useLocation();
+  const [isAdmin, setIsAdmin] = React.useState(false);
   const [displayName, setDisplayName] = React.useState('Player');
   const [level, setLevel] = React.useState(1);
   const [rank, setRank] = React.useState(0);
@@ -19,8 +20,13 @@ export function Sidebar() {
     let active = true;
 
     (async () => {
-      const profile = await HackquestService.getCurrentUserProfile();
+      const [profile, session] = await Promise.all([
+        HackquestService.getCurrentUserProfile(),
+        HackquestService.getAuthMe(),
+      ]);
       if (!active || !profile) return;
+
+      setIsAdmin(session.authUser?.role === 'admin');
 
       setDisplayName(profile.displayName);
       setLevel(profile.level);
@@ -49,6 +55,11 @@ export function Sidebar() {
     if (exact) return location.pathname === path;
     return location.pathname.startsWith(path);
   };
+
+  const visibleNavItems = React.useMemo(
+    () => appNavItems.filter((item) => item.path !== '/admin' || isAdmin),
+    [isAdmin]
+  );
 
   const handleLogout = React.useCallback(async () => {
     await HackquestService.logout();
@@ -149,7 +160,7 @@ export function Sidebar() {
 
       {/* Nav items */}
       <nav style={{ flex: 1, padding: '12px 12px', overflowY: 'auto' }}>
-        {appNavItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const active = isActive(item.path, item.exact);
           const Icon = item.icon;
           const accentColor = item.accent || colors.neon500;

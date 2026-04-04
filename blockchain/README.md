@@ -164,6 +164,25 @@ python scripts/get_user_assets.py --wallet <WALLET>
 python scripts/verify_tx.py --tx-id <TX_ID>
 ```
 
+### 7) Demo End-to-End XP Transaction (Mnemonic-Based)
+
+Use your own wallet mnemonic as backend admin signer for a demo test.
+
+PowerShell example:
+
+```powershell
+$env:ALGO_ADMIN_MNEMONIC = "<your 25-word mnemonic>"
+python scripts/demo_tx_flow.py --xp 25 --quest-id demo-quest
+```
+
+Optional (record XP for a specific wallet):
+
+```powershell
+python scripts/demo_tx_flow.py --wallet <USER_WALLET_ADDRESS> --xp 25 --quest-id demo-quest
+```
+
+The command outputs JSON including tx id, confirmation status, and updated XP summary.
+
 ## Node.js Backend Integration (Express Example)
 
 Use `child_process.spawn`/`execFile` to call scripts and parse JSON.
