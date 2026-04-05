@@ -8,13 +8,14 @@ import { colors, fonts } from '@/lib/design-tokens';
 import { appNavItems } from '@/components/layout/navigation';
 import { HackquestService } from '@/lib/services/hackquest.service';
 
-const ADMIN_NAV_PATHS = ['/dashboard', '/quests', '/admin', '/leaderboard', '/marketplace', '/settings'];
+const ADMIN_NAV_PATHS = ['/admin', '/settings'];
+const ORGANIZER_NAV_PATHS = ['/dashboard', '/quests', '/admin', '/leaderboard', '/marketplace', '/settings'];
 const PLAYER_NAV_PATHS = [
   '/dashboard',
   '/quests',
   '/team',
   '/leaderboard',
-  '/profile/cipher_hawk',
+  '/profile/current',
   '/marketplace',
   '/activity',
   '/wallet',
@@ -35,7 +36,8 @@ const adminSectionNavItems = [
 export function Sidebar() {
   const location = useLocation();
   const searchParams = useSearchParams();
-  const [isAdmin, setIsAdmin] = React.useState(false);
+  const [accountRole, setAccountRole] = React.useState<'admin' | 'organizer' | 'user'>('user');
+  const [username, setUsername] = React.useState('player');
   const [displayName, setDisplayName] = React.useState('Player');
   const [level, setLevel] = React.useState(1);
   const [rank, setRank] = React.useState(0);
@@ -52,7 +54,8 @@ export function Sidebar() {
       ]);
       if (!active || !profile) return;
 
-      setIsAdmin(session.authUser?.role === 'admin');
+      setAccountRole(session.authUser?.role ?? 'user');
+      setUsername(String(profile.username || 'player'));
 
       setDisplayName(profile.displayName);
       setLevel(profile.level);
@@ -84,13 +87,28 @@ export function Sidebar() {
 
   const visibleNavItems = React.useMemo(
     () => {
-      const allowedPaths = isAdmin ? ADMIN_NAV_PATHS : PLAYER_NAV_PATHS;
+      const allowedPaths =
+        accountRole === 'admin'
+          ? ADMIN_NAV_PATHS
+          : accountRole === 'organizer'
+          ? ORGANIZER_NAV_PATHS
+          : PLAYER_NAV_PATHS;
       return appNavItems.filter((item) => allowedPaths.includes(item.path));
     },
-    [isAdmin]
+    [accountRole]
   );
 
-  const showAdminSectionMenu = isAdmin && location.pathname === '/admin';
+  const resolvedNavItems = React.useMemo(
+    () =>
+      visibleNavItems.map((item) =>
+        item.path === '/profile/current'
+          ? { ...item, path: `/profile/${username}` }
+          : item
+      ),
+    [username, visibleNavItems]
+  );
+
+  const showAdminSectionMenu = accountRole !== 'user' && location.pathname === '/admin';
   const activeAdminSection = searchParams.get('section') || 'overview';
 
   const handleLogout = React.useCallback(async () => {
@@ -249,7 +267,7 @@ export function Sidebar() {
             })}
           </>
         ) : (
-          visibleNavItems.map((item) => {
+          resolvedNavItems.map((item) => {
             const active = isActive(item.path, item.exact);
             const Icon = item.icon;
             const accentColor = item.accent || colors.neon500;

@@ -32,11 +32,13 @@ export type UserProfile = {
   nftCount: number;
 };
 
+export type AccountRole = "admin" | "organizer" | "user";
+
 export type AdminUserInfo = {
   username: string;
   displayName: string;
   email: string;
-  role: "admin" | "user";
+  role: AccountRole;
   walletAddress: string;
   level: number;
   rank: number;
@@ -110,7 +112,7 @@ export type WalletTransactionView = {
 type AuthUser = {
   id: string;
   email: string;
-  role: "admin" | "user";
+  role: AccountRole;
   username: string;
   displayName: string;
   backendUserId: string;
@@ -126,31 +128,36 @@ type WalletSession = {
   walletProvider: string | null;
 };
 
+type RegisteredPlayer = UserProfile & {
+  role: AccountRole;
+  password: string;
+  createdAt: string;
+  lastActiveAt: string;
+};
+
 const AUTH_SESSION_KEY = "hackquest.auth.session";
 const WALLET_SESSION_KEY = "hackquest.wallet.session";
 const PROFILE_KEY = "hackquest.profile";
+const PLAYERS_KEY = "hackquest.players.v1";
 const ADMIN_ACCESS_KEY = "HQ-ADMIN-2026";
-const DEMO_ADMIN_EMAIL = "admin.demo@hackquest.io";
-const DEMO_ADMIN_PASSWORD = "DemoAdmin@123";
-const DEMO_ADMIN_USERNAME = "demo_admin";
-const DEMO_ADMIN_DISPLAY_NAME = "Demo Admin";
 
 let memoryAuthSession: AuthSession | null = null;
 let memoryWalletSession: WalletSession | null = null;
 let memoryProfile: UserProfile | null = null;
+let memoryPlayers: RegisteredPlayer[] | null = null;
 
 const defaultProfile: UserProfile = {
-  backendUserId: "user_001",
-  authUserId: "auth_001",
-  username: "cipher_hawk",
-  displayName: "Cipher Hawk",
+  backendUserId: "user_default",
+  authUserId: "auth_default",
+  username: "player",
+  displayName: "Player",
   email: "player@hackquest.dev",
-  walletAddress: "ALGO7B3XQKF9VPNR2MJLCWTZ4DVXHM8YPWQSEJANKQ5K9XZ",
+  walletAddress: "ALGO_PLAYER_DEFAULT",
   className: "Architect",
-  level: 12,
-  rank: 8,
-  totalXp: 7420,
-  nftCount: 3,
+  level: 1,
+  rank: 1,
+  totalXp: 0,
+  nftCount: 0,
 };
 
 const sampleQuests: QuestView[] = [
@@ -220,102 +227,9 @@ const sampleQuests: QuestView[] = [
   },
 ];
 
-const sampleLeaderboard: LeaderboardView[] = [
-  {
-    rank: 1,
-    username: "algo_phoenix",
-    displayName: "Algo Phoenix",
-    class: "Architect",
-    level: 24,
-    xp: 18240,
-    quests: 42,
-    nfts: 12,
-    lastActive: "2m ago",
-    change: "+1",
-  },
-  {
-    rank: 2,
-    username: "block_shaman",
-    displayName: "Block Shaman",
-    class: "Warrior",
-    level: 22,
-    xp: 17120,
-    quests: 39,
-    nfts: 9,
-    lastActive: "5m ago",
-    change: "-1",
-  },
-  {
-    rank: 3,
-    username: "terra_ghost",
-    displayName: "Terra Ghost",
-    class: "Mage",
-    level: 20,
-    xp: 15990,
-    quests: 35,
-    nfts: 8,
-    lastActive: "11m ago",
-    change: "+0",
-  },
-  {
-    rank: 4,
-    username: "void_architect",
-    displayName: "Void Architect",
-    class: "Phantom",
-    level: 18,
-    xp: 13850,
-    quests: 29,
-    nfts: 6,
-    lastActive: "18m ago",
-    change: "+2",
-  },
-  {
-    rank: 5,
-    username: defaultProfile.username,
-    displayName: defaultProfile.displayName,
-    class: defaultProfile.className,
-    level: defaultProfile.level,
-    xp: defaultProfile.totalXp,
-    quests: 18,
-    nfts: defaultProfile.nftCount,
-    lastActive: "just now",
-    change: "+3",
-  },
-];
+const sampleLeaderboard: LeaderboardView[] = [];
 
-const sampleActivity: ActivityView[] = [
-  {
-    id: 1,
-    type: "quest",
-    player: "Cipher Hawk",
-    avatar: null,
-    event: "completed quest",
-    detail: "Deploy Smart Contract",
-    time: "2 min ago",
-    reactions: { "👏": 6, "⚡": 3 },
-    xp: "+500 XP",
-  },
-  {
-    id: 2,
-    type: "nft",
-    player: "Algo Phoenix",
-    avatar: null,
-    event: "minted NFT",
-    detail: "Bug Slayer #48",
-    time: "15 min ago",
-    reactions: { "🔥": 4 },
-  },
-  {
-    id: 3,
-    type: "rank",
-    player: "Block Shaman",
-    avatar: null,
-    event: "climbed to",
-    detail: "#2 Global",
-    time: "1h ago",
-    reactions: { "👏": 2 },
-  },
-];
+const sampleActivity: ActivityView[] = [];
 
 const sampleMarketplace: MarketplaceItemView[] = [
   {
@@ -427,64 +341,7 @@ const sampleEvents = [
   },
 ];
 
-const sampleAdminDirectory: AdminUserInfo[] = [
-  {
-    username: "algo_phoenix",
-    displayName: "Algo Phoenix",
-    email: "algo.phoenix@hackquest.io",
-    role: "user",
-    walletAddress: "ALGO9P1HOENIX7B3XQKFM2JLCWTZ4DVXHM8YPWQSEJANKQ5K",
-    level: 24,
-    rank: 1,
-    totalXp: 18240,
-    nftCount: 12,
-    lastActive: "2m ago",
-    flags: ["high-performer"],
-    source: "directory",
-  },
-  {
-    username: "block_shaman",
-    displayName: "Block Shaman",
-    email: "block.shaman@hackquest.io",
-    role: "user",
-    walletAddress: "ALGO2SHAMAN7B3XQKFM2JLCWTZ4DVXHM8YPWQSEJANKQ5K9X",
-    level: 22,
-    rank: 2,
-    totalXp: 17120,
-    nftCount: 9,
-    lastActive: "5m ago",
-    flags: ["needs-review:submission-queue"],
-    source: "directory",
-  },
-  {
-    username: "terra_ghost",
-    displayName: "Terra Ghost",
-    email: "terra.ghost@hackquest.io",
-    role: "user",
-    walletAddress: "ALGO3GHOST7B3XQKFM2JLCWTZ4DVXHM8YPWQSEJANKQ5K9X",
-    level: 20,
-    rank: 3,
-    totalXp: 15990,
-    nftCount: 8,
-    lastActive: "11m ago",
-    flags: [],
-    source: "directory",
-  },
-  {
-    username: "ops_admin",
-    displayName: "Ops Admin",
-    email: "ops.admin@hackquest.io",
-    role: "admin",
-    walletAddress: "ALGO4ADMIN7B3XQKFM2JLCWTZ4DVXHM8YPWQSEJANKQ5K9X",
-    level: 30,
-    rank: 7,
-    totalXp: 9700,
-    nftCount: 2,
-    lastActive: "1m ago",
-    flags: ["admin-account"],
-    source: "directory",
-  },
-];
+const sampleAdminDirectory: AdminUserInfo[] = [];
 
 function canUseStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -577,52 +434,216 @@ function setProfile(profile: UserProfile) {
 function updateProfile(partial: Partial<UserProfile>) {
   const next = { ...getProfile(), ...partial };
   setProfile(next);
+
+  const session = getAuthSession();
+  if (session?.authUser) {
+    syncPlayerDirectory(next, session.authUser.role);
+  }
+}
+
+function getRoleIdPrefixes(role: AccountRole) {
+  if (role === "admin") {
+    return { authPrefix: "auth_adm", backendPrefix: "admin" };
+  }
+
+  if (role === "organizer") {
+    return { authPrefix: "auth_org", backendPrefix: "org" };
+  }
+
+  return { authPrefix: "auth_usr", backendPrefix: "user" };
+}
+
+function createAuthUserIdForRole(role: AccountRole) {
+  const { authPrefix } = getRoleIdPrefixes(role);
+  return `${authPrefix}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function createBackendUserIdForRole(role: AccountRole) {
+  const { backendPrefix } = getRoleIdPrefixes(role);
+  return `${backendPrefix}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function createAuthSession(
   email: string,
   username: string,
   displayName: string,
-  requestedRole: "admin" | "user" = "user"
+  requestedRole: AccountRole = "user",
+  identifiers?: { authUserId?: string; backendUserId?: string }
 ): AuthSession {
   const normalizedEmail = email.trim().toLowerCase();
-  const isAdminEmail = normalizedEmail.includes("admin") || normalizedEmail.includes("organizer");
-  const resolvedRole: "admin" | "user" = requestedRole === "admin" && isAdminEmail ? "admin" : "user";
 
   return {
     token: `token_${Math.random().toString(36).slice(2, 12)}`,
     authUser: {
-      id: `auth_${Math.random().toString(36).slice(2, 10)}`,
+      id: identifiers?.authUserId || createAuthUserIdForRole(requestedRole),
       email: normalizedEmail,
-      role: resolvedRole,
+      role: requestedRole,
       username,
       displayName,
-      backendUserId: `user_${Math.random().toString(36).slice(2, 10)}`,
+      backendUserId: identifiers?.backendUserId || createBackendUserIdForRole(requestedRole),
     },
   };
 }
 
-function isAdminSession() {
-  return getAuthSession()?.authUser?.role === "admin";
+function isPrivilegedSession() {
+  const role = getAuthSession()?.authUser?.role;
+  return role === "admin" || role === "organizer";
+}
+
+function getCurrentRole(): AccountRole {
+  return getAuthSession()?.authUser?.role ?? "user";
+}
+
+function canRolePlayGames(role: AccountRole) {
+  return role !== "admin";
+}
+
+function canCurrentRolePlayGames() {
+  return canRolePlayGames(getCurrentRole());
 }
 
 function nowIso() {
   return new Date().toISOString();
 }
 
-export const HackquestService = {
-  getDemoAdminCredentials() {
-    return {
-      email: DEMO_ADMIN_EMAIL,
-      password: DEMO_ADMIN_PASSWORD,
-      accessKey: ADMIN_ACCESS_KEY,
-    };
-  },
+function toDisplayName(username: string) {
+  return username
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    .trim();
+}
 
+function createWalletAddress(seed: string) {
+  const normalized = seed.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16) || "PLAYER";
+  return `ALGO_${normalized}_${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+function formatLastActive(isoValue: string) {
+  const time = new Date(isoValue).getTime();
+  if (!Number.isFinite(time)) {
+    return "just now";
+  }
+
+  const diffMs = Math.max(0, Date.now() - time);
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  if (diffMinutes < 1) return "just now";
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
+function readPlayers() {
+  const fromStorage = readStoredJson<RegisteredPlayer[]>(PLAYERS_KEY);
+  if (fromStorage) {
+    memoryPlayers = fromStorage;
+    return fromStorage;
+  }
+
+  if (memoryPlayers) {
+    return memoryPlayers;
+  }
+
+  memoryPlayers = [];
+  return memoryPlayers;
+}
+
+function writePlayers(players: RegisteredPlayer[]) {
+  memoryPlayers = players;
+  writeStoredJson(PLAYERS_KEY, players);
+}
+
+function rankPlayers(players: RegisteredPlayer[]) {
+  const ranked = [...players]
+    .sort((left, right) => Number(right.totalXp || 0) - Number(left.totalXp || 0));
+
+  return ranked.map((player, index) => ({
+    ...player,
+    rank: index + 1,
+  }));
+}
+
+function findPlayerByEmail(email: string) {
+  const lookup = email.trim().toLowerCase();
+  return readPlayers().find((player) => player.email.trim().toLowerCase() === lookup) || null;
+}
+
+function findPlayerByUsername(username: string) {
+  const lookup = username.trim().toLowerCase();
+  return readPlayers().find((player) => player.username.trim().toLowerCase() === lookup) || null;
+}
+
+function syncPlayerDirectory(
+  profile: UserProfile,
+  role: AccountRole,
+  password?: string
+) {
+  const players = readPlayers();
+  const normalizedUsername = String(profile.username || "").trim().toLowerCase();
+  const normalizedEmail = String(profile.email || "").trim().toLowerCase();
+
+  const existingIndex = players.findIndex(
+    (player) =>
+      player.username.trim().toLowerCase() === normalizedUsername ||
+      player.email.trim().toLowerCase() === normalizedEmail
+  );
+
+  const existing = existingIndex >= 0 ? players[existingIndex] : null;
+
+  const merged: RegisteredPlayer = {
+    ...profile,
+    username: normalizedUsername,
+    displayName: profile.displayName || toDisplayName(normalizedUsername),
+    email: normalizedEmail,
+    walletAddress: profile.walletAddress || createWalletAddress(normalizedUsername),
+    className: profile.className || "Architect",
+    level: Math.max(1, Number(profile.level || 1)),
+    totalXp: Math.max(0, Number(profile.totalXp || 0)),
+    nftCount: Math.max(0, Number(profile.nftCount || 0)),
+    authUserId:
+      profile.authUserId ||
+      existing?.authUserId ||
+      createAuthUserIdForRole(role),
+    backendUserId:
+      profile.backendUserId ||
+      existing?.backendUserId ||
+      createBackendUserIdForRole(role),
+    role,
+    password: password ?? existing?.password ?? "",
+    createdAt: existing?.createdAt || nowIso(),
+    lastActiveAt: nowIso(),
+  };
+
+  const nextPlayers = [...players];
+  if (existingIndex >= 0) {
+    nextPlayers[existingIndex] = merged;
+  } else {
+    nextPlayers.push(merged);
+  }
+
+  const ranked = rankPlayers(nextPlayers);
+  writePlayers(ranked);
+
+  const saved =
+    ranked.find(
+      (player) =>
+        player.username.trim().toLowerCase() === normalizedUsername ||
+        player.email.trim().toLowerCase() === normalizedEmail
+    ) || merged;
+
+  setProfile({ ...saved });
+  return saved;
+}
+
+export const HackquestService = {
   async login(payload: {
     email: string;
     password: string;
-    requestedRole?: "admin" | "user";
+    requestedRole?: AccountRole;
     adminAccessKey?: string;
   }) {
     if (!payload.email || !payload.password) {
@@ -630,40 +651,70 @@ export const HackquestService = {
     }
 
     const normalizedEmail = payload.email.trim().toLowerCase();
-    const isDemoAdminLogin =
-      normalizedEmail === DEMO_ADMIN_EMAIL && payload.password === DEMO_ADMIN_PASSWORD;
-
     const requestedRole = payload.requestedRole ?? "user";
-    if (
-      requestedRole === "admin" &&
-      !isDemoAdminLogin &&
-      payload.adminAccessKey !== ADMIN_ACCESS_KEY
-    ) {
+    if (requestedRole !== "user" && payload.adminAccessKey !== ADMIN_ACCESS_KEY) {
       return null;
     }
 
-    const baseProfile = getProfile();
-    const username = isDemoAdminLogin
-      ? DEMO_ADMIN_USERNAME
-      : payload.email.split("@")[0] || baseProfile.username;
-    const displayName = isDemoAdminLogin
-      ? DEMO_ADMIN_DISPLAY_NAME
-      : baseProfile.displayName || "HackQuest Player";
+    let player = findPlayerByEmail(normalizedEmail);
 
-    const session = createAuthSession(payload.email, username, displayName, requestedRole);
-    if (requestedRole === "admin" && session.authUser?.role !== "admin") {
+    if (player?.password && player.password !== payload.password) {
       return null;
     }
+
+    if (!player && requestedRole === "user") {
+      return null;
+    }
+
+    if (!player && requestedRole !== "user") {
+      const bootstrapUsername =
+        normalizedEmail.split("@")[0]?.toLowerCase() || `${requestedRole}_${Math.random().toString(36).slice(2, 6)}`;
+
+      const bootstrapProfile: UserProfile = {
+        authUserId: createAuthUserIdForRole(requestedRole),
+        backendUserId: createBackendUserIdForRole(requestedRole),
+        username: bootstrapUsername,
+        displayName: toDisplayName(bootstrapUsername),
+        email: normalizedEmail,
+        walletAddress: createWalletAddress(bootstrapUsername),
+        className: "Architect",
+        level: 1,
+        rank: 1,
+        totalXp: 0,
+        nftCount: 0,
+      };
+
+      player = syncPlayerDirectory(bootstrapProfile, requestedRole, payload.password);
+    }
+
+    if (!player) {
+      return null;
+    }
+
+    if (requestedRole === "user" && player.role !== "user") {
+      return null;
+    }
+
+    if (requestedRole !== "user" && player.role !== requestedRole) {
+      return null;
+    }
+
+    const resolvedRole: AccountRole = requestedRole === "user" ? player.role : requestedRole;
+    const syncedPlayer = syncPlayerDirectory(player, resolvedRole, payload.password);
+
+    const session = createAuthSession(
+      syncedPlayer.email,
+      syncedPlayer.username,
+      syncedPlayer.displayName,
+      resolvedRole,
+      {
+        authUserId: syncedPlayer.authUserId,
+        backendUserId: syncedPlayer.backendUserId,
+      }
+    );
 
     setAuthSession(session);
-
-    updateProfile({
-      authUserId: session.authUser?.id ?? baseProfile.authUserId,
-      backendUserId: session.authUser?.backendUserId ?? baseProfile.backendUserId,
-      email: session.authUser?.email ?? payload.email,
-      username,
-      displayName,
-    });
+    setProfile({ ...syncedPlayer });
 
     return session;
   },
@@ -679,21 +730,37 @@ export const HackquestService = {
       return null;
     }
 
-    const session = createAuthSession(payload.email, payload.username, payload.displayName);
-    setAuthSession(session);
+    const normalizedEmail = payload.email.trim().toLowerCase();
+    const normalizedUsername = payload.username.trim().toLowerCase();
 
-    updateProfile({
-      authUserId: session.authUser?.id ?? defaultProfile.authUserId,
-      backendUserId: session.authUser?.backendUserId ?? defaultProfile.backendUserId,
+    if (findPlayerByEmail(normalizedEmail) || findPlayerByUsername(normalizedUsername)) {
+      return null;
+    }
+
+    const session = createAuthSession(
+      normalizedEmail,
+      normalizedUsername,
+      payload.displayName,
+      "user"
+    );
+
+    const registeredProfile: UserProfile = {
+      authUserId: session.authUser?.id ?? `auth_${Math.random().toString(36).slice(2, 10)}`,
+      backendUserId: session.authUser?.backendUserId ?? `user_${Math.random().toString(36).slice(2, 10)}`,
       displayName: payload.displayName,
-      username: payload.username,
-      email: payload.email.toLowerCase(),
-      walletAddress: payload.walletAddress ?? getProfile().walletAddress,
-      rank: 120,
+      username: normalizedUsername,
+      email: normalizedEmail,
+      walletAddress: payload.walletAddress || createWalletAddress(normalizedUsername),
+      className: "Architect",
+      rank: 1,
       level: 1,
       totalXp: 0,
       nftCount: 0,
-    });
+    };
+
+    const savedPlayer = syncPlayerDirectory(registeredProfile, "user", payload.password);
+    setAuthSession(session);
+    setProfile({ ...savedPlayer });
 
     return session;
   },
@@ -755,6 +822,20 @@ export const HackquestService = {
   },
 
   async getCurrentUserProfile() {
+    const session = getAuthSession();
+    if (session?.authUser) {
+      const player =
+        readPlayers().find(
+          (entry) =>
+            entry.authUserId === session.authUser?.id ||
+            entry.email.toLowerCase() === session.authUser?.email.toLowerCase()
+        ) || null;
+
+      if (player) {
+        setProfile({ ...player });
+      }
+    }
+
     const profile = getProfile();
     const walletAddress = this.getCurrentWalletAddress();
     return {
@@ -764,6 +845,10 @@ export const HackquestService = {
   },
 
   async addBonusXp(amount: number, source = 'bonus') {
+    if (!canCurrentRolePlayGames()) {
+      return this.getCurrentUserProfile();
+    }
+
     const safeAmount = Number(amount || 0);
     if (!Number.isFinite(safeAmount) || safeAmount <= 0) {
       return this.getCurrentUserProfile();
@@ -790,6 +875,10 @@ export const HackquestService = {
   },
 
   async incrementNftCount(amount = 1) {
+    if (!canCurrentRolePlayGames()) {
+      return this.getCurrentUserProfile();
+    }
+
     const safeAmount = Number(amount || 0);
     if (!Number.isFinite(safeAmount) || safeAmount <= 0) {
       return this.getCurrentUserProfile();
@@ -804,18 +893,37 @@ export const HackquestService = {
   },
 
   async listUsersForAdmin() {
-    if (!isAdminSession()) {
+    if (!isPrivilegedSession()) {
       return [] as AdminUserInfo[];
     }
 
-    const users = clone(sampleAdminDirectory);
+    const users: AdminUserInfo[] = readPlayers().map((player) => ({
+      username: player.username,
+      displayName: player.displayName,
+      email: player.email,
+      role: player.role,
+      walletAddress: player.walletAddress,
+      level: Number(player.level || 1),
+      rank: Number(player.rank || 1),
+      totalXp: Number(player.totalXp || 0),
+      nftCount: Number(player.nftCount || 0),
+      lastActive: formatLastActive(player.lastActiveAt),
+      flags:
+        player.role === "admin"
+          ? ["admin-account"]
+          : player.role === "organizer"
+          ? ["organizer-account"]
+          : [],
+      source: "directory",
+    }));
+
     const viewer = await this.getCurrentUserProfile();
     if (!users.some((user) => user.username === viewer.username)) {
       users.push({
         username: viewer.username,
         displayName: viewer.displayName,
         email: viewer.email,
-        role: getAuthSession()?.authUser?.role === "admin" ? "admin" : "user",
+        role: getCurrentRole(),
         walletAddress: viewer.walletAddress,
         level: viewer.level,
         rank: viewer.rank,
@@ -831,7 +939,7 @@ export const HackquestService = {
   },
 
   async getUserInfoForAdmin(username: string) {
-    if (!isAdminSession()) {
+    if (!isPrivilegedSession()) {
       return null;
     }
 
@@ -856,7 +964,11 @@ export const HackquestService = {
       username: entry.username,
       displayName: entry.displayName,
       email: `${entry.username}@hackquest.io`,
-      role: entry.username.includes("admin") ? "admin" : "user",
+      role: entry.username.includes("admin")
+        ? "admin"
+        : entry.username.includes("organizer") || entry.username.includes("org")
+        ? "organizer"
+        : "user",
       walletAddress: `ALGO_${entry.username.toUpperCase()}_${entry.rank}`,
       level: entry.level,
       rank: entry.rank,
@@ -869,38 +981,80 @@ export const HackquestService = {
   },
 
   async getQuests() {
+    if (!canCurrentRolePlayGames()) {
+      return [] as QuestView[];
+    }
+
     return clone(sampleQuests);
   },
 
   async getLeaderboard() {
     const profile = await this.getCurrentUserProfile();
-    const merged = clone(sampleLeaderboard);
-    const existingIndex = merged.findIndex((entry) => entry.username === profile.username);
+    const role = getAuthSession()?.authUser?.role ?? "user";
+    syncPlayerDirectory(profile, role);
 
-    const viewerEntry: LeaderboardView = {
-      rank: existingIndex >= 0 ? merged[existingIndex].rank : 5,
-      username: profile.username,
-      displayName: profile.displayName,
-      class: String(profile.className || "Architect"),
-      level: Number(profile.level || 1),
-      xp: Number(profile.totalXp || 0),
-      quests: 18,
-      nfts: Number(profile.nftCount || 0),
-      lastActive: "just now",
+    const rankedPlayers = rankPlayers(readPlayers());
+    writePlayers(rankedPlayers);
+
+    return rankedPlayers.map((player) => ({
+      rank: Number(player.rank || 1),
+      username: player.username,
+      displayName: player.displayName,
+      class: String(player.className || "Architect"),
+      level: Number(player.level || 1),
+      xp: Number(player.totalXp || 0),
+      quests: Math.max(0, Math.round(Number(player.level || 1) * 2)),
+      nfts: Number(player.nftCount || 0),
+      lastActive: formatLastActive(player.lastActiveAt),
       change: "+0",
-    };
-
-    if (existingIndex >= 0) {
-      merged[existingIndex] = viewerEntry;
-    } else {
-      merged.push(viewerEntry);
-    }
-
-    return merged.sort((a, b) => a.rank - b.rank);
+    }));
   },
 
   async getActivityFeed() {
-    return clone(sampleActivity);
+    const leaderboard = await this.getLeaderboard();
+    const feedSource = leaderboard.slice(0, 5);
+
+    return feedSource.map((entry, index) => {
+      const variant = index % 3;
+
+      if (variant === 0) {
+        return {
+          id: index + 1,
+          type: "quest",
+          player: entry.displayName,
+          avatar: null,
+          event: "completed quest",
+          detail: sampleQuests[index % sampleQuests.length]?.title || "Quest Completed",
+          time: `${index + 2} min ago`,
+          reactions: { "👏": 3 + index, "⚡": 2 + index },
+          xp: `+${Math.max(50, Math.round(entry.level * 20))} XP`,
+        } as ActivityView;
+      }
+
+      if (variant === 1) {
+        return {
+          id: index + 1,
+          type: "nft",
+          player: entry.displayName,
+          avatar: null,
+          event: "minted NFT",
+          detail: `Mythic Relic #${index + 10}`,
+          time: `${(index + 1) * 8} min ago`,
+          reactions: { "🔥": 2 + index },
+        } as ActivityView;
+      }
+
+      return {
+        id: index + 1,
+        type: "rank",
+        player: entry.displayName,
+        avatar: null,
+        event: "climbed to",
+        detail: `#${entry.rank} Global`,
+        time: `${(index + 1) * 12} min ago`,
+        reactions: { "👏": 2 + index },
+      } as ActivityView;
+    });
   },
 
   async getMarketplaceItems() {
@@ -948,6 +1102,10 @@ export const HackquestService = {
   },
 
   async getQuestProgressForCurrentWallet() {
+    if (!canCurrentRolePlayGames()) {
+      return [] as Array<{ questId: string; currentValue: number; targetValue: number; isCompleted: boolean }>;
+    }
+
     return [
       { questId: "q-smart-contract", currentValue: 62, targetValue: 100, isCompleted: false },
       { questId: "q-defi-dashboard", currentValue: 12, targetValue: 100, isCompleted: false },
@@ -956,6 +1114,10 @@ export const HackquestService = {
   },
 
   async completeQuestForCurrentWallet(questId: string) {
+    if (!canCurrentRolePlayGames()) {
+      return null;
+    }
+
     if (!questId) {
       return null;
     }

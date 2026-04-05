@@ -38,14 +38,65 @@ export function ActivityPage() {
     };
   }, []);
 
-  const fullFeed = [
-    ...activityList,
-    { id: 8, type: 'rank', player: 'Algo Phoenix', avatar: null, event: 'climbed to', detail: '#5 Global', time: '52 min ago', reactions: { '👏': 11, '⚡': 5 } },
-    { id: 9, type: 'quest', player: 'Block Shaman', avatar: null, event: 'completed quest', detail: 'Write Technical Documentation', xp: '+150 XP', time: '1h ago', reactions: { '👏': 3 } },
-    { id: 10, type: 'nft', player: 'Terra Ghost', avatar: null, event: 'minted NFT', detail: 'Chain Master #31', time: '1h 12m ago', reactions: { '🔥': 7, '⚡': 2 } },
-    { id: 11, type: 'team', player: 'AlgoBuilders', avatar: null, event: 'submitted quest', detail: 'Deploy Smart Contract', time: '1h 30m ago', reactions: { '👏': 16, '🔥': 9 } },
-    { id: 12, type: 'quest', player: 'Xen Protocol', avatar: null, event: 'completed quest', detail: 'Social Awareness Campaign', xp: '+300 XP', time: '2h ago', reactions: { '👏': 4, '⚡': 8 } },
-  ];
+  const supplementalFeed = React.useMemo(
+    () =>
+      leaderboardList.slice(0, 5).map((player, index) => {
+        const variant = index % 3;
+
+        if (variant === 0) {
+          return {
+            id: 100 + index,
+            type: 'rank',
+            player: player.displayName,
+            avatar: null,
+            event: 'climbed to',
+            detail: `#${player.rank} Global`,
+            time: `${(index + 1) * 11} min ago`,
+            reactions: { '👏': 2 + index, '⚡': 1 + index },
+          } as ActivityView;
+        }
+
+        if (variant === 1) {
+          return {
+            id: 100 + index,
+            type: 'quest',
+            player: player.displayName,
+            avatar: null,
+            event: 'completed quest',
+            detail: 'Deploy Smart Contract',
+            xp: `+${Math.max(100, Math.round(player.level * 30))} XP`,
+            time: `${(index + 1) * 14} min ago`,
+            reactions: { '👏': 2 + index },
+          } as ActivityView;
+        }
+
+        return {
+          id: 100 + index,
+          type: 'nft',
+          player: player.displayName,
+          avatar: null,
+          event: 'minted NFT',
+          detail: `Mythic Relic #${index + 10}`,
+          time: `${(index + 1) * 17} min ago`,
+          reactions: { '🔥': 1 + index, '⚡': 1 },
+        } as ActivityView;
+      }),
+    [leaderboardList]
+  );
+
+  const latestNftMints = React.useMemo(
+    () =>
+      leaderboardList.slice(0, 3).map((player, index) => ({
+        name: `Mythic Relic #${index + 40}`,
+        player: player.displayName,
+        icon: index === 0 ? '🐉' : index === 1 ? '🦄' : '🪽',
+        rarity: index === 0 ? 'LEGENDARY' : index === 1 ? 'EPIC' : 'RARE',
+        time: `${(index + 1) * 9}m ago`,
+      })),
+    [leaderboardList]
+  );
+
+  const fullFeed = [...activityList, ...supplementalFeed];
 
   return (
     <div style={{ fontFamily: fonts.outfit }}>
@@ -177,11 +228,7 @@ export function ActivityPage() {
           {/* New NFTs */}
           <div style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', padding: '20px' }}>
             <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.purple500, marginBottom: '16px' }}>NEW NFTs MINTED</div>
-            {[
-              { name: 'Bug Slayer #47', player: 'Void Architect', icon: '🐛', rarity: 'LEGENDARY', time: '5m ago' },
-              { name: 'Speed Demon #12', player: 'Neon Blade', icon: '⚡', rarity: 'EPIC', time: '41m ago' },
-              { name: 'Doc Writer #203', player: 'Storm Mage X', icon: '📄', rarity: 'RARE', time: '58m ago' },
-            ].map((nft) => (
+            {latestNftMints.map((nft) => (
               <div key={nft.name} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: `1px solid ${colors.borderSubtle}` }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: colors.purple100, border: '1px solid rgba(123,47,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>{nft.icon}</div>
                 <div>

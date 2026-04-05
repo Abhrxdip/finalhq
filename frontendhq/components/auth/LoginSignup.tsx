@@ -140,7 +140,6 @@ interface LoginSignupProps {
 
 export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
   const navigate = useNavigate();
-  const demoAdmin = HackquestService.getDemoAdminCredentials();
   const [activeTab, setActiveTab] = useState<"login" | "signup">(initialTab);
 
   // Shared form state
@@ -155,7 +154,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
   const [btnHovered, setBtnHovered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [accessMode, setAccessMode] = useState<"user" | "admin">("user");
+  const [accessMode, setAccessMode] = useState<"user" | "organizer" | "admin">("user");
   const [adminAccessKey, setAdminAccessKey] = useState("");
 
   const strength = getPasswordStrength(password);
@@ -226,12 +225,8 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
       return;
     }
 
-    const isDemoAdminAttempt =
-      email.trim().toLowerCase() === demoAdmin.email &&
-      password === demoAdmin.password;
-
-    if (accessMode === "admin" && !adminAccessKey && !isDemoAdminAttempt) {
-      setAuthError("Admin access key is required for admin login.");
+    if (accessMode !== "user" && !adminAccessKey) {
+      setAuthError("Privileged access key is required for organizer/admin login.");
       return;
     }
 
@@ -240,20 +235,22 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
       email,
       password,
       requestedRole: accessMode,
-      adminAccessKey: accessMode === "admin" ? adminAccessKey || undefined : undefined,
+      adminAccessKey: accessMode !== "user" ? adminAccessKey || undefined : undefined,
     });
     setIsSubmitting(false);
 
     if (!session) {
       setAuthError(
         accessMode === "admin"
-          ? "Admin login failed. Use an approved admin email and valid access key, or use demo admin credentials."
+          ? "Admin login failed. Use an approved admin email and valid access key."
+          : accessMode === "organizer"
+          ? "Organizer login failed. Use an approved organizer email and valid access key."
           : "Login failed. Check your credentials and backend availability."
       );
       return;
     }
 
-    navigate(session.authUser?.role === "admin" ? "/admin" : "/dashboard");
+    navigate(session.authUser?.role === "user" ? "/dashboard" : "/admin");
   };
 
   const handleSignup = async () => {
@@ -468,9 +465,10 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                     <Shield size={14} />
                     Access Mode
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
                     {([
                       { key: "user", label: "User Workspace" },
+                      { key: "organizer", label: "Organizer Console" },
                       { key: "admin", label: "Admin Console" },
                     ] as const).map((mode) => (
                       <button
@@ -500,7 +498,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                       </button>
                     ))}
                   </div>
-                  {accessMode === "admin" && (
+                  {accessMode !== "user" && (
                     <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
                       <div
                         style={{
@@ -510,40 +508,8 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                           color: "rgba(255,255,255,0.82)",
                         }}
                       >
-                        Demo ID: {demoAdmin.email}
+                        Admin access key is required for organizer/admin sign-in.
                       </div>
-                      <div
-                        style={{
-                          fontFamily: "'Share Tech Mono', monospace",
-                          fontSize: 10,
-                          letterSpacing: "1px",
-                          color: "rgba(255,255,255,0.82)",
-                        }}
-                      >
-                        Demo Password: {demoAdmin.password}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          resetAuthError();
-                          setEmail(demoAdmin.email);
-                          setPassword(demoAdmin.password);
-                          setAdminAccessKey(demoAdmin.accessKey);
-                        }}
-                        style={{
-                          height: 32,
-                          borderRadius: 8,
-                          border: "1px solid rgba(0,255,65,0.3)",
-                          background: "rgba(0,255,65,0.1)",
-                          color: NEON,
-                          fontFamily: "Outfit, sans-serif",
-                          fontSize: 12,
-                          fontWeight: 600,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Use Demo Admin Login
-                      </button>
                     </div>
                   )}
                 </div>
@@ -564,10 +530,10 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                   leftIcon={<Lock size={18} />}
                   rightElement={eyeBtn(showPassword, setShowPassword)}
                 />
-                {accessMode === "admin" && (
+                {accessMode !== "user" && (
                   <InputField
                     type="password"
-                    placeholder="Admin access key"
+                    placeholder="Privileged access key"
                     value={adminAccessKey}
                     onChange={(e) => {
                       resetAuthError();

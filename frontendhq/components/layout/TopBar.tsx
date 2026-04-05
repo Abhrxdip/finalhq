@@ -7,24 +7,30 @@ import { NavLink, useLocation, useNavigate } from '@/lib/router-compat';
 import { appNavItems } from '@/components/layout/navigation';
 import { HackquestService } from '@/lib/services/hackquest.service';
 
-const topBarNavPaths = [
+const USER_TOPBAR_PATHS = [
   '/dashboard',
   '/quests',
   '/event',
   '/team',
   '/leaderboard',
-  '/profile/cipher_hawk',
+  '/profile/current',
   '/marketplace',
   '/activity',
   '/wallet',
   '/notifications',
   '/settings',
+];
+
+const ORGANIZER_TOPBAR_PATHS = [
+  ...USER_TOPBAR_PATHS,
   '/admin',
 ];
 
+const ADMIN_TOPBAR_PATHS = ['/admin', '/settings'];
+
 export function TopBar() {
   const [search, setSearch] = useState('');
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [accountRole, setAccountRole] = useState<'admin' | 'organizer' | 'user'>('user');
   const [xp, setXp] = useState(0);
   const [avatarInitials, setAvatarInitials] = useState('PL');
   const [profilePath, setProfilePath] = useState('/profile/player');
@@ -41,10 +47,11 @@ export function TopBar() {
       ]);
       if (!active || !profile) return;
 
-      setIsAdmin(session.authUser?.role === 'admin');
+      const role = session.authUser?.role ?? 'user';
+      setAccountRole(role);
 
       setXp(profile.totalXp);
-      setProfilePath(`/profile/${profile.username}`);
+      setProfilePath(role === 'admin' ? '/admin' : `/profile/${profile.username}`);
 
       const initials = profile.displayName
         .split(' ')
@@ -65,11 +72,17 @@ export function TopBar() {
   }, []);
 
   const visibleTopBarItems = React.useMemo(
-    () =>
-      appNavItems.filter(
-        (item) => topBarNavPaths.includes(item.path) && (item.path !== '/admin' || isAdmin)
-      ),
-    [isAdmin]
+    () => {
+      const allowedPaths =
+        accountRole === 'admin'
+          ? ADMIN_TOPBAR_PATHS
+          : accountRole === 'organizer'
+          ? ORGANIZER_TOPBAR_PATHS
+          : USER_TOPBAR_PATHS;
+
+      return appNavItems.filter((item) => allowedPaths.includes(item.path));
+    },
+    [accountRole]
   );
 
   const handleLogout = React.useCallback(async () => {

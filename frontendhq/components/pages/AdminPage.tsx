@@ -41,11 +41,7 @@ const xpActivityData = [
   { time: 'Now', xp: 2800 },
 ];
 
-const pendingSubmissions = [
-  { id: 's1', player: 'Algo Phoenix', quest: 'Deploy Smart Contract', githubUrl: 'github.com/algo/contract', liveUrl: 'demo.algo.app', xp: 500, time: '18 min ago' },
-  { id: 's2', player: 'Block Shaman', quest: 'DeFi Dashboard', githubUrl: 'github.com/block/defi', liveUrl: 'defi.blockshaman.app', xp: 1200, time: '32 min ago' },
-  { id: 's3', player: 'Terra Ghost', quest: 'Technical Documentation', githubUrl: 'github.com/terra/docs', liveUrl: '', xp: 150, time: '1h ago' },
-];
+const submissionQuestPool = ['Deploy Smart Contract', 'DeFi Dashboard', 'Write Technical Documentation', 'Social Awareness Campaign'];
 
 const metricCards = [
   { label: 'Active Participants', value: '1,247', delta: '+23 today', color: colors.neon500 },
@@ -93,7 +89,7 @@ export function AdminPage() {
   const navigate = useNavigate();
   const [leaderboardList, setLeaderboardList] = useState<LeaderboardView[]>([]);
   const [authChecked, setAuthChecked] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasConsoleAccess, setHasConsoleAccess] = useState(false);
   const [activeSection, setActiveSection] = useState<AdminSectionId>(
     () => resolveAdminSection(searchParams.get('section'))
   );
@@ -118,6 +114,20 @@ export function AdminPage() {
     premiumNftCategory: 'Singularity' as PremiumNftCategory,
   });
 
+  const pendingSubmissions = React.useMemo(
+    () =>
+      leaderboardList.slice(0, 8).map((player, index) => ({
+        id: `submission-${player.username}`,
+        player: player.displayName,
+        quest: submissionQuestPool[index % submissionQuestPool.length],
+        githubUrl: `github.com/${player.username}/hackquest-${index + 1}`,
+        liveUrl: index % 2 === 0 ? `https://${player.username}.vercel.app` : '',
+        xp: Math.max(100, Math.round(player.level * 40)),
+        time: index === 0 ? 'just now' : `${(index + 1) * 9} min ago`,
+      })),
+    [leaderboardList]
+  );
+
   useEffect(() => {
     setActiveSection(resolveAdminSection(searchParams.get('section')));
   }, [searchParams]);
@@ -134,7 +144,9 @@ export function AdminPage() {
 
       if (!active) return;
       setLeaderboardList(remoteLeaderboard);
-      setIsAdmin(session.authUser?.role === 'admin');
+      setHasConsoleAccess(
+        session.authUser?.role === 'admin' || session.authUser?.role === 'organizer'
+      );
       setOrganizerEvents(remoteEvents);
 
       if (remoteEvents[0]) {
@@ -161,12 +173,12 @@ export function AdminPage() {
     navigate(`/admin?section=${section}`, { replace: true });
   };
 
-  if (authChecked && !isAdmin) {
+  if (authChecked && !hasConsoleAccess) {
     return (
       <div style={{ fontFamily: fonts.outfit }}>
         <div style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', padding: '28px' }}>
-          <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.orange500, marginBottom: '10px' }}>ADMIN ACCESS REQUIRED</div>
-          <h1 style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff', margin: '0 0 10px' }}>You are signed in as a non-admin account</h1>
+          <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.orange500, marginBottom: '10px' }}>ADMIN OR ORGANIZER ACCESS REQUIRED</div>
+          <h1 style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff', margin: '0 0 10px' }}>You are signed in as a non-privileged account</h1>
           <p style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '16px' }}>
             To deploy smart contracts from this UI, register/login with an email configured in backend ADMIN_EMAILS.
           </p>
@@ -1126,7 +1138,7 @@ export function AdminPage() {
                       </div>
                       <div>
                         <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.textMuted }}>ROLE</div>
-                        <div style={{ fontSize: '13px', color: selectedUserInfo.role === 'admin' ? colors.orange500 : colors.neon500 }}>{selectedUserInfo.role.toUpperCase()}</div>
+                        <div style={{ fontSize: '13px', color: selectedUserInfo.role === 'admin' ? colors.orange500 : selectedUserInfo.role === 'organizer' ? colors.purple500 : colors.neon500 }}>{selectedUserInfo.role.toUpperCase()}</div>
                       </div>
                       <div>
                         <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.textMuted }}>XP / RANK</div>

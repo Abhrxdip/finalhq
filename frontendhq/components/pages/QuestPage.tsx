@@ -25,7 +25,7 @@ const formatDateTime = (value: string) => {
 export function QuestPage() {
   const navigate = useNavigate();
   const [quests, setQuests] = useState<OrganizerEvent[]>([]);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isPrivileged, setIsPrivileged] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,7 +41,9 @@ export function QuestPage() {
         return;
       }
 
-      setIsAdmin(session.authUser?.role === 'admin');
+      setIsPrivileged(
+        session.authUser?.role === 'admin' || session.authUser?.role === 'organizer'
+      );
       setQuests(createdQuests);
       setLoading(false);
     })();
@@ -66,7 +68,7 @@ export function QuestPage() {
           </p>
         </div>
 
-        {isAdmin && (
+        {isPrivileged && (
           <button
             onClick={() => navigate('/admin')}
             style={{

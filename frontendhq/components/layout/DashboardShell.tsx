@@ -6,7 +6,7 @@ import { Background } from "@/components/layout/Background";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { colors } from "@/lib/design-tokens";
 import { HackquestService } from "@/lib/services/hackquest.service";
-import { useNavigate } from "@/lib/router-compat";
+import { useLocation, useNavigate } from "@/lib/router-compat";
 
 interface DashboardShellProps {
   children: ReactNode;
@@ -14,6 +14,7 @@ interface DashboardShellProps {
 
 export function DashboardShell({ children }: DashboardShellProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
@@ -36,13 +37,22 @@ export function DashboardShell({ children }: DashboardShellProps) {
         return;
       }
 
+      const role = session.authUser.role;
+      const isAllowedAdminRoute =
+        location.pathname.startsWith("/admin") || location.pathname.startsWith("/settings");
+
+      if (role === "admin" && !isAllowedAdminRoute) {
+        navigate("/admin", { replace: true });
+        return;
+      }
+
       setIsReady(true);
     })();
 
     return () => {
       active = false;
     };
-  }, [navigate]);
+  }, [location.pathname, navigate]);
 
   if (!isReady) {
     return (

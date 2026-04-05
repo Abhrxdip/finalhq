@@ -27,7 +27,7 @@ export const appNavItems: AppNavItem[] = [
   { path: '/quests', label: 'Quest', icon: Zap },
   { path: '/team', label: 'Team', icon: Users },
   { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-  { path: '/profile/cipher_hawk', label: 'Profile', icon: User },
+  { path: '/profile/current', label: 'Profile', icon: User },
   { path: '/marketplace', label: 'Marketplace', icon: ShoppingBag },
   { path: '/activity', label: 'Activity', icon: Activity },
   { path: '/wallet', label: 'Wallet', icon: Wallet },
