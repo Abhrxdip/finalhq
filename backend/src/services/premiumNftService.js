@@ -49,6 +49,15 @@ const getSupabaseClient = () => {
 
 const getSupabaseTable = () => process.env.SUPABASE_NFT_TABLE || 'nfts';
 const getSupabaseBucket = () => process.env.SUPABASE_NFT_BUCKET || 'nfts';
+const getGeminiModel = () =>
+  process.env.GEMINI_IMAGE_MODEL || 'nano-banana-pro-preview';
+const getGeminiEndpoint = () => {
+  if (process.env.GEMINI_IMAGE_ENDPOINT) {
+    return process.env.GEMINI_IMAGE_ENDPOINT;
+  }
+
+  return `https://generativelanguage.googleapis.com/v1beta/models/${getGeminiModel()}:generateContent`;
+};
 
 const isMissingTableError = (error) => {
   const message = String(error?.details || error?.message || '').toLowerCase();
@@ -118,6 +127,78 @@ const callStabilityCore = async ({ prompt }) => {
   };
 };
 
+const extractGeminiImagePart = (payload) => {
+  const candidates = Array.isArray(payload?.candidates) ? payload.candidates : [];
+
+  for (const candidate of candidates) {
+    const parts = Array.isArray(candidate?.content?.parts) ? candidate.content.parts : [];
+    const imagePart = parts.find((part) => part?.inlineData?.data);
+    if (imagePart?.inlineData?.data) {
+      return imagePart.inlineData;
+    }
+  }
+
+  return null;
+};
+
+const callGeminiImage = async ({ prompt }) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new AppError(500, 'GEMINI_API_KEY is not configured');
+  }
+
+  const endpoint = getGeminiEndpoint();
+  const delimiter = endpoint.includes('?') ? '&' : '?';
+  const url = `${endpoint}${delimiter}key=${encodeURIComponent(apiKey)}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: `Generate a single collectible NFT artwork image with no text overlays. ${prompt}`,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseModalities: ['TEXT', 'IMAGE'],
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    const statusCode = response.status >= 400 && response.status < 500 ? response.status : 502;
+    throw new AppError(
+      statusCode,
+      `Gemini image generation failed with status ${response.status}`,
+      responseText.slice(0, 600)
+    );
+  }
+
+  const payload = await response.json();
+  const inlineData = extractGeminiImagePart(payload);
+  if (!inlineData?.data) {
+    throw new AppError(
+      502,
+      'Gemini image generation did not return image data',
+      JSON.stringify(payload).slice(0, 600)
+    );
+  }
+
+  return {
+    imageBuffer: Buffer.from(inlineData.data, 'base64'),
+    mimeType: inlineData.mimeType || 'image/png',
+  };
+};
+
 const uploadToSupabaseStorage = async ({ imageBuffer, mimeType, filePrefix }) => {
   const supabase = getSupabaseClient();
   const bucket = getSupabaseBucket();
@@ -173,9 +254,49 @@ const generateNft = async ({
     prompt,
   });
 
-  const { imageBuffer, mimeType } = await callStabilityCore({
-    prompt: resolvedPrompt,
-  });
+  let generatedImage = null;
+  let imageProvider = 'stability';
+
+  try {
+    generatedImage = await callStabilityCore({
+      prompt: resolvedPrompt,
+    });
+  } catch (stabilityError) {
+    if (!process.env.GEMINI_API_KEY) {
+      throw stabilityError;
+    }
+
+    try {
+      generatedImage = await callGeminiImage({
+        prompt: resolvedPrompt,
+      });
+      imageProvider = 'gemini';
+    } catch (geminiError) {
+      const combinedDetails = JSON.stringify({
+        stability: {
+          message: stabilityError?.message,
+          details: stabilityError?.details,
+        },
+        gemini: {
+          message: geminiError?.message,
+          details: geminiError?.details,
+        },
+      });
+
+      const resolvedStatus =
+        geminiError?.statusCode && geminiError.statusCode >= 400 && geminiError.statusCode < 500
+          ? geminiError.statusCode
+          : 502;
+
+      throw new AppError(
+        resolvedStatus,
+        'Both Stability and Gemini image generation failed',
+        combinedDetails.slice(0, 600)
+      );
+    }
+  }
+
+  const { imageBuffer, mimeType } = generatedImage;
 
   const { storagePath, publicUrl } = await uploadToSupabaseStorage({
     imageBuffer,
@@ -221,6 +342,7 @@ const generateNft = async ({
     storagePath,
     metadataPersisted,
     warning,
+    imageProvider,
   };
 };
 
