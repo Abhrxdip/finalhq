@@ -11,9 +11,22 @@ const port = Number(process.env.PORT || 4000);
 const server = http.createServer(app);
 initSocket(server);
 
+const canBypassDbBootstrap = process.env.NODE_ENV !== 'production';
+
 const startServer = async () => {
   try {
-    await authService.ensureAuthSchema();
+    try {
+      await authService.ensureAuthSchema();
+    } catch (error) {
+      if (!canBypassDbBootstrap) {
+        throw error;
+      }
+
+      console.warn('[HackQuest] Auth schema initialization failed, continuing in limited mode');
+      console.warn('[HackQuest] DB-dependent endpoints may be unavailable until Postgres is reachable');
+      console.warn(error);
+    }
+
     server.listen(port, () => {
       console.log(`[HackQuest] Server running on port ${port}`);
     });

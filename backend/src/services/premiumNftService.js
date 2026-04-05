@@ -50,6 +50,15 @@ const getSupabaseClient = () => {
 const getSupabaseTable = () => process.env.SUPABASE_NFT_TABLE || 'nfts';
 const getSupabaseBucket = () => process.env.SUPABASE_NFT_BUCKET || 'nfts';
 
+const isMissingTableError = (error) => {
+  const message = String(error?.details || error?.message || '').toLowerCase();
+  return (
+    message.includes('could not find the table') ||
+    message.includes('schema cache') ||
+    message.includes('relation')
+  );
+};
+
 const normalizeCategory = (value) => {
   const raw = String(value || '').trim().toLowerCase();
   const resolved = PREMIUM_CATEGORY_MAP[raw];
@@ -185,11 +194,32 @@ const generateNft = async ({
     created_at: new Date().toISOString(),
   };
 
-  const nft = await insertNftMetadata(metadataRow);
+  let nft;
+  let metadataPersisted = true;
+  let warning = null;
+
+  try {
+    nft = await insertNftMetadata(metadataRow);
+  } catch (error) {
+    if (!isMissingTableError(error)) {
+      throw error;
+    }
+
+    // Keep generation usable when storage is healthy but metadata table has not been created yet.
+    metadataPersisted = false;
+    warning = `Supabase table '${getSupabaseTable()}' is missing. Run backend/sql/supabase_nfts_table.sql to enable persistent NFT metadata.`;
+
+    nft = {
+      id: id || crypto.randomUUID(),
+      ...metadataRow,
+    };
+  }
 
   return {
     nft,
     storagePath,
+    metadataPersisted,
+    warning,
   };
 };
 
