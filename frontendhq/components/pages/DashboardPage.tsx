@@ -128,7 +128,7 @@ export function DashboardPage() {
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colors.neon500 }} />
               <span style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500 }}>LIVE QUEST</span>
             </div>
-            <div style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff' }}>HackQuest Genesis · Season 01</div>
+            <div style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff' }}>hacktera Genesis · Season 01</div>
             <div style={{ fontSize: '13px', color: colors.textMuted, marginTop: '4px' }}>1,247 participants · 4 tracks active</div>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>

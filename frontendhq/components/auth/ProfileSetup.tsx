@@ -256,7 +256,7 @@ export function ProfileSetup() {
     setUsernameChecking(true);
     setUsernameAvailable(null);
     const timer = setTimeout(() => {
-      const taken = ["admin", "hackquest", "test", "user", "hacker"];
+      const taken = ["admin", "hacktera", "test", "user", "hacker"];
       setUsernameAvailable(!taken.includes(username.toLowerCase()));
       setUsernameChecking(false);
     }, 600);
@@ -333,7 +333,7 @@ export function ProfileSetup() {
           zIndex: 0,
         }}
       >
-        HACKQUEST
+        HACKTERA
       </div>
 
       {/* Two-column layout */}

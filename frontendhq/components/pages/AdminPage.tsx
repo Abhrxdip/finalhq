@@ -1191,7 +1191,7 @@ export function AdminPage() {
                       </div>
                       <span style={{ fontSize: '13px', fontWeight: 600, color: colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.displayName}</span>
                     </div>
-                    <span style={{ fontFamily: fonts.mono, fontSize: '11px', color: colors.textMuted }}>{p.username}@hackquest.io</span>
+                    <span style={{ fontFamily: fonts.mono, fontSize: '11px', color: colors.textMuted }}>{p.username}@hacktera.io</span>
                     <span style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: colors.neon500 }}>LVL {p.level}</span>
                     <span style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: colors.neon500 }}>⚡ {(p.xp / 1000).toFixed(1)}k</span>
                     {joinedPlayerSet.has(p.username.toLowerCase()) ? (

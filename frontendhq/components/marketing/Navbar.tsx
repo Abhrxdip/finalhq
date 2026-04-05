@@ -76,7 +76,7 @@ export function Navbar() {
             fontFamily: 'Orbitron, sans-serif', fontSize: '15px',
             fontWeight: 700, color: '#00FF41', letterSpacing: '2px', lineHeight: 1,
           }}>
-            HACKQUEST
+            HACKTERA
           </div>
           <div style={{
             fontFamily: 'Share Tech Mono, monospace', fontSize: '8px',
@@ -208,7 +208,7 @@ export function Navbar() {
                     letterSpacing: '2px',
                   }}
                 >
-                  HACKQUEST
+                  HACKTERA
                 </div>
                 <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: colors.textMuted, letterSpacing: '1px' }}>
                   NAVIGATION

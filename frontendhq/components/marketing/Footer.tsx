@@ -47,7 +47,7 @@ export function Footer() {
                   fontFamily: 'Orbitron, sans-serif', fontSize: '14px',
                   fontWeight: 700, color: '#00FF41', letterSpacing: '2px',
                 }}>
-                  HACKQUEST
+                  HACKTERA
                 </div>
                 <div style={{
                   fontFamily: 'Share Tech Mono, monospace', fontSize: '8.5px',
@@ -113,7 +113,7 @@ export function Footer() {
             fontFamily: 'Share Tech Mono, monospace', fontSize: '9.5px',
             letterSpacing: '0.8px', color: '#1A2A1A',
           }}>
-            © 2026 HACKQUEST · ALL RIGHTS RESERVED
+            © 2026 HACKTERA · ALL RIGHTS RESERVED
           </span>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

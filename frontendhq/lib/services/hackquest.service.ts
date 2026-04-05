@@ -151,7 +151,7 @@ const defaultProfile: UserProfile = {
   authUserId: "auth_default",
   username: "player",
   displayName: "Player",
-  email: "player@hackquest.dev",
+  email: "player@hacktera.dev",
   walletAddress: "ALGO_PLAYER_DEFAULT",
   className: "Architect",
   level: 1,
@@ -331,7 +331,7 @@ const sampleTransactions: WalletTransactionView[] = [
 const sampleEvents = [
   {
     id: "event-genesis-s01",
-    name: "HackQuest Genesis",
+    name: "hacktera Genesis",
     status: "live",
     participantCount: 1247,
     startDate: "2026-04-01T00:00:00.000Z",
@@ -653,7 +653,7 @@ export const HackquestService = {
 
     const normalizedEmail =
       payload.email?.trim().toLowerCase() ||
-      (requestedRole === "admin" ? "admin@hackquest.local" : "");
+      (requestedRole === "admin" ? "admin@hacktera.local" : "");
     const loginPassword =
       payload.password ||
       (requestedRole === "admin" ? payload.adminAccessKey || "" : "");
@@ -982,7 +982,7 @@ export const HackquestService = {
     return {
       username: entry.username,
       displayName: entry.displayName,
-      email: `${entry.username}@hackquest.io`,
+      email: `${entry.username}@hacktera.io`,
       role: entry.username.includes("admin")
         ? "admin"
         : entry.username.includes("organizer") || entry.username.includes("org")

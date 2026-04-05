@@ -235,7 +235,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
         ? {
             requestedRole: "admin" as const,
             adminAccessKey: adminAccessKey || undefined,
-            email: "admin@hackquest.local",
+            email: "admin@hacktera.local",
             password: adminAccessKey,
           }
         : {
@@ -331,7 +331,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
           zIndex: 0,
         }}
       >
-        HACKQUEST
+        HACKTERA
       </div>
 
       {/* Card */}
@@ -382,7 +382,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
               letterSpacing: "2px",
             }}
           >
-            HACKQUEST
+            HACKTERA
           </div>
           <div
             style={{
@@ -650,7 +650,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                   color: MUTED,
                 }}
               >
-                New to HackQuest?{" "}
+                New to hacktera?{" "}
                 <span
                   style={{ color: NEON, cursor: "pointer" }}
                   onClick={() => setActiveTab("signup")}

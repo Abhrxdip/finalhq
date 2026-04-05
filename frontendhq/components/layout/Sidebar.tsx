@@ -156,7 +156,7 @@ export function Sidebar() {
           </div>
           <div>
             <div style={{ fontFamily: fonts.orbitron, fontSize: '14px', fontWeight: 700, color: colors.neon500, letterSpacing: '2px' }}>
-              HACKQUEST
+              HACKTERA
             </div>
             <div style={{ fontSize: '11px', color: colors.textMuted, fontFamily: fonts.mono, letterSpacing: '1px' }}>
               GENESIS · S01

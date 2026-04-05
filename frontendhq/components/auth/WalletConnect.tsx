@@ -255,7 +255,7 @@ export function WalletConnect() {
           zIndex: 0,
         }}
       >
-        HACKQUEST
+        HACKTERA
       </div>
 
       {/* Card */}
@@ -681,7 +681,7 @@ export function WalletConnect() {
               lineHeight: 1.5,
             }}
           >
-            HackQuest never accesses your funds. Connection is read-only for XP
+            hacktera never accesses your funds. Connection is read-only for XP
             and NFT minting.
           </span>
         </div>

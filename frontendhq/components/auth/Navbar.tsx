@@ -60,7 +60,7 @@ export function Navbar() {
             letterSpacing: "2px",
           }}
         >
-          HACKQUEST
+          HACKTERA
         </span>
       </div>
 

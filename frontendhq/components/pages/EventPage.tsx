@@ -51,7 +51,7 @@ export function EventPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Overview');
   const [timeLeft, setTimeLeft] = useState({ h: 36, m: 14, s: 22 });
-  const [eventTitle, setEventTitle] = useState('HackQuest Genesis');
+  const [eventTitle, setEventTitle] = useState('hacktera Genesis');
   const [eventStatus, setEventStatus] = useState('LIVE');
   const [participants, setParticipants] = useState(1247);
   const [startDate, setStartDate] = useState('Apr 1, 2026');
@@ -102,7 +102,7 @@ export function EventPage() {
 
       if (!active) return;
 
-      setEventTitle(resolvedEvent.name || 'HackQuest Genesis');
+      setEventTitle(resolvedEvent.name || 'hacktera Genesis');
       setEventStatus((resolvedEvent.status || 'live').toUpperCase());
       setParticipants(resolvedEvent.participantCount || 1247);
       setStartDate(formatEventDate(resolvedEvent.startDate, 'Apr 1, 2026'));
@@ -216,7 +216,7 @@ export function EventPage() {
           {activeTab === 'Overview' && (
             <div>
               <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500, marginBottom: '10px' }}>ABOUT THIS QUEST</div>
-              <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '20px' }}>HackQuest Genesis Season 01 is the flagship Algorand hackathon bringing together the brightest blockchain developers worldwide. Compete across 4 specialized tracks, earn XP, mint exclusive NFTs, and claim your place on the global leaderboard.</p>
+              <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '20px' }}>hacktera Genesis Season 01 is the flagship Algorand hackathon bringing together the brightest blockchain developers worldwide. Compete across 4 specialized tracks, earn XP, mint exclusive NFTs, and claim your place on the global leaderboard.</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 {[['🌍', 'Global Quest', '1,247 participants from 68 countries'], ['⚡', 'XP Racing', 'Compete for XP across all 4 tracks'], ['🎖️', 'NFT Rewards', 'Exclusive on-chain badges for top performers'], ['◆', 'Algorand Native', 'All rewards minted on Algorand mainnet']].map(([icon, title, desc]) => (
                   <div key={title as string} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: `1px solid ${colors.borderSubtle}`, borderRadius: '12px', padding: '16px' }}>
