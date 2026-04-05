@@ -5,6 +5,7 @@ import { useNavigate } from '@/lib/router-compat';
 import { Zap, ExternalLink } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { HackquestService, type MarketplaceItemView } from '@/lib/services/hackquest.service';
+import { PremiumEventsService, type PrimeArtifactItem } from '@/lib/services/premium-events.service';
 
 const categoryTabs = ['All', 'Quest Rewards', 'Event Exclusive', 'Team Rewards', 'Limited Edition'];
 
@@ -68,6 +69,10 @@ export function MarketplacePage() {
   const [profilePath, setProfilePath] = useState('/profile/player');
   const [mintTxId, setMintTxId] = useState<string | null>(null);
   const [mintError, setMintError] = useState<string | null>(null);
+  const [primeArtifacts, setPrimeArtifacts] = useState<PrimeArtifactItem[]>([]);
+  const [currentPlayerId, setCurrentPlayerId] = useState('');
+  const [primeStatus, setPrimeStatus] = useState<string | null>(null);
+  const [claimingPrimeId, setClaimingPrimeId] = useState<string | null>(null);
 
   React.useEffect(() => {
     let active = true;
@@ -78,9 +83,12 @@ export function MarketplacePage() {
         HackquestService.getCurrentUserProfile(),
       ]);
 
+      const premiumItems = await PremiumEventsService.getPrimeArtifactsMarketplace();
+
       if (!active) return;
 
       setMarketItems(remoteItems);
+      setPrimeArtifacts(premiumItems);
 
       if (profile) {
         setAvailableXp(profile.totalXp);
@@ -88,6 +96,7 @@ export function MarketplacePage() {
           setWalletAddress(profile.walletAddress);
         }
         setProfilePath(`/profile/${profile.username}`);
+        setCurrentPlayerId(String(profile.username || '').trim().toLowerCase());
       }
 
       const resolvedWallet = profile?.walletAddress || HackquestService.getCurrentWalletAddress();
@@ -164,6 +173,29 @@ export function MarketplacePage() {
   };
 
   const featuredItem = marketItems.find((item) => item.rarity === 'LEGENDARY') ?? marketItems[0] ?? null;
+
+  const handleClaimPrimeArtifact = async (artifact: PrimeArtifactItem) => {
+    if (artifact.ownerId) {
+      return;
+    }
+
+    if (!currentPlayerId) {
+      setPrimeStatus('Login required to claim a Prime Artifact.');
+      return;
+    }
+
+    try {
+      setClaimingPrimeId(artifact.id);
+      await PremiumEventsService.claimPrimeArtifact(artifact.id, currentPlayerId);
+      const refreshed = await PremiumEventsService.getPrimeArtifactsMarketplace();
+      setPrimeArtifacts(refreshed);
+      setPrimeStatus(`Claimed ${artifact.name} as ${currentPlayerId}.`);
+    } catch (error) {
+      setPrimeStatus(error instanceof Error ? error.message : 'Failed to claim Prime Artifact.');
+    } finally {
+      setClaimingPrimeId(null);
+    }
+  };
 
   return (
     <div style={{ fontFamily: fonts.outfit }}>
@@ -266,6 +298,60 @@ export function MarketplacePage() {
             </div>
           );
         })}
+      </div>
+
+      {/* Prime Artifacts */}
+      <div style={{ marginTop: '28px' }}>
+        <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.purple500, marginBottom: '14px' }}>
+          PRIME ARTIFACTS
+        </div>
+        {primeStatus && (
+          <div style={{ fontSize: '12px', color: colors.blue500, marginBottom: '10px' }}>{primeStatus}</div>
+        )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px' }}>
+          {primeArtifacts.map((artifact) => (
+            <div key={artifact.id} style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '14px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', aspectRatio: '3 / 4', overflow: 'hidden', borderBottom: `1px solid ${colors.borderSubtle}` }}>
+                <img src={artifact.imageUrl} alt={artifact.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div style={{ padding: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <div style={{ fontFamily: fonts.orbitron, fontSize: '13px', fontWeight: 700, color: '#fff' }}>{artifact.name}</div>
+                  <span style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '1px', color: colors.purple500 }}>
+                    {artifact.category.toUpperCase()}
+                  </span>
+                </div>
+                {artifact.ownerId ? (
+                  <div style={{ fontSize: '11px', color: colors.neon500, lineHeight: 1.6 }}>
+                    Claimed on {new Date(artifact.claimedAt || artifact.createdAt).toLocaleString('en-US')} by Player ID: {artifact.ownerId}
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: '11px', color: colors.textMuted, marginBottom: '8px' }}>Available in marketplace</div>
+                    <button
+                      onClick={() => handleClaimPrimeArtifact(artifact)}
+                      disabled={claimingPrimeId === artifact.id}
+                      style={{
+                        width: '100%',
+                        height: '32px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        backgroundColor: colors.neon500,
+                        color: colors.bgBase,
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: claimingPrimeId === artifact.id ? 'not-allowed' : 'pointer',
+                        opacity: claimingPrimeId === artifact.id ? 0.7 : 1,
+                      }}
+                    >
+                      {claimingPrimeId === artifact.id ? 'Claiming...' : 'Claim Artifact'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Confirmation Modal */}

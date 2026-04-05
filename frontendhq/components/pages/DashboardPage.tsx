@@ -5,6 +5,7 @@ import { useNavigate } from '@/lib/router-compat';
 import { Zap, Trophy, Users, Clock, TrendingUp, ChevronRight } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { HackquestService, type ActivityView, type LeaderboardView, type QuestView, type UserProfile } from '@/lib/services/hackquest.service';
+import { PremiumEventsService, type PendingReward } from '@/lib/services/premium-events.service';
 
 function StatCard({ label, value, sub, color, icon }: { label: string; value: string; sub?: string; color: string; icon: React.ReactNode }) {
   return (
@@ -26,6 +27,10 @@ export function DashboardPage() {
   const [leaderboardList, setLeaderboardList] = React.useState<LeaderboardView[]>([]);
   const [activityList, setActivityList] = React.useState<ActivityView[]>([]);
   const [profile, setProfile] = React.useState<UserProfile | null>(null);
+  const [pendingReward, setPendingReward] = React.useState<PendingReward | null>(null);
+  const [showRewardPopup, setShowRewardPopup] = React.useState(false);
+  const [rewardMessage, setRewardMessage] = React.useState<string | null>(null);
+  const [rewardAnimation, setRewardAnimation] = React.useState(false);
 
   React.useEffect(() => {
     let active = true;
@@ -43,6 +48,12 @@ export function DashboardPage() {
       setLeaderboardList(remoteLeaderboard);
       setActivityList(remoteActivity);
       setProfile(remoteProfile);
+
+      const nextPendingReward = await PremiumEventsService.getPendingRewardForCurrentUser();
+      if (!active) return;
+
+      setPendingReward(nextPendingReward);
+      setShowRewardPopup(Boolean(nextPendingReward));
     })();
 
     return () => {
@@ -59,6 +70,38 @@ export function DashboardPage() {
   const questsCompleted = myLeaderboardEntry?.quests ?? questList.filter((quest) => quest.status === 'Completed').length;
   const nftCount = profile?.nftCount ?? myLeaderboardEntry?.nfts ?? 0;
   const streak = profile ? Math.max(1, Math.min(30, Math.floor(profile.totalXp / 400))) : 0;
+
+  const handleClaimReward = async () => {
+    if (!pendingReward) {
+      return;
+    }
+
+    try {
+      setRewardAnimation(true);
+
+      if (pendingReward.isWinner) {
+        await PremiumEventsService.grantWinnerNftFromReward(pendingReward);
+        await PremiumEventsService.consumePendingReward(pendingReward.id);
+        setRewardMessage('Winner reward complete: your Premium NFT has been generated and sent to inventory.');
+      } else {
+        await PremiumEventsService.consumePendingReward(pendingReward.id);
+        setRewardMessage(`Ranking reward claimed: +${pendingReward.xpAwarded} XP added.`);
+      }
+
+      const nextPending = await PremiumEventsService.getPendingRewardForCurrentUser();
+      setPendingReward(nextPending);
+
+      if (!nextPending) {
+        setTimeout(() => {
+          setShowRewardPopup(false);
+        }, 1000);
+      }
+    } catch (error) {
+      setRewardMessage(error instanceof Error ? error.message : 'Unable to claim reward.');
+    } finally {
+      setRewardAnimation(false);
+    }
+  };
 
   return (
     <div style={{ fontFamily: fonts.outfit }}>
@@ -77,13 +120,13 @@ export function DashboardPage() {
         <StatCard label="NFTs EARNED" value={String(nftCount)} sub="On-chain inventory" color={colors.purple500} icon={<span style={{ fontSize: '20px' }}>🎖️</span>} />
       </div>
 
-      {/* Countdown + Active event */}
+      {/* Countdown + Active quest */}
       <div style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', padding: '24px', marginBottom: '32px', background: 'linear-gradient(135deg, rgba(0,255,65,0.04) 0%, rgba(0,0,0,0) 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colors.neon500 }} />
-              <span style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500 }}>LIVE EVENT</span>
+              <span style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500 }}>LIVE QUEST</span>
             </div>
             <div style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff' }}>HackQuest Genesis · Season 01</div>
             <div style={{ fontSize: '13px', color: colors.textMuted, marginTop: '4px' }}>1,247 participants · 4 tracks active</div>
@@ -97,10 +140,10 @@ export function DashboardPage() {
             ))}
           </div>
           <button
-            onClick={() => navigate('/event')}
+            onClick={() => navigate('/quests')}
             style={{ height: '44px', backgroundColor: colors.neon500, color: colors.bgBase, borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', padding: '0 20px' }}
           >
-            View Event →
+            View Quest →
           </button>
         </div>
       </div>
@@ -218,6 +261,71 @@ export function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {showRewardPopup && pendingReward && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 120, backgroundColor: 'rgba(0,0,0,0.78)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '18px' }}>
+          <div style={{ width: '560px', maxWidth: '96vw', backgroundColor: colors.bgSurface, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', overflow: 'hidden' }}>
+            <div style={{ backgroundColor: pendingReward.isWinner ? 'rgba(255,215,0,0.12)' : colors.neon100, borderBottom: `1px solid ${colors.borderSubtle}`, padding: '14px 20px' }}>
+              <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '2px', color: pendingReward.isWinner ? colors.gold500 : colors.neon500 }}>
+                QUEST COMPLETED • RANKING REWARD
+              </div>
+            </div>
+
+            <div style={{ padding: '22px' }}>
+              <h2 style={{ fontFamily: fonts.orbitron, fontSize: '22px', margin: '0 0 10px', color: '#fff' }}>
+                {pendingReward.isWinner ? 'You Won Premium NFT Access' : 'You Received XP Reward'}
+              </h2>
+
+              <div style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: '14px', lineHeight: 1.6 }}>
+                Event: {pendingReward.eventName}
+                <br />
+                Rank: #{pendingReward.rank}
+              </div>
+
+              {pendingReward.isWinner ? (
+                <div style={{ marginBottom: '16px', backgroundColor: 'rgba(255,215,0,0.08)', border: `1px solid rgba(255,215,0,0.3)`, borderRadius: '12px', padding: '14px' }}>
+                  <div style={{ fontFamily: fonts.orbitron, fontSize: '14px', fontWeight: 700, color: colors.gold500, marginBottom: '6px' }}>
+                    Premium NFT Category: {pendingReward.premiumNftCategory}
+                  </div>
+                  <div style={{ fontSize: '12px', color: colors.textSecondary }}>
+                    Generate animation appears while your NFT is minted and published to marketplace + inventory.
+                  </div>
+                </div>
+              ) : (
+                <div style={{ marginBottom: '16px', backgroundColor: colors.neon100, border: `1px solid ${colors.neon300}`, borderRadius: '12px', padding: '14px' }}>
+                  <div style={{ fontFamily: fonts.orbitron, fontSize: '18px', fontWeight: 700, color: colors.neon500 }}>
+                    +{pendingReward.xpAwarded} XP
+                  </div>
+                  <div style={{ fontSize: '12px', color: colors.textSecondary, marginTop: '4px' }}>
+                    XP reward based on organizer ranking distribution (100 to 10 XP).
+                  </div>
+                </div>
+              )}
+
+              {rewardAnimation && (
+                <div style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ width: '24px', height: '24px', border: `3px solid ${colors.neon300}`, borderTop: `3px solid ${colors.neon500}`, borderRadius: '50%', animation: 'hqSpin 0.9s linear infinite' }} />
+                  <div style={{ fontSize: '12px', color: colors.textMuted }}>
+                    {pendingReward.isWinner ? 'Generating your Premium NFT...' : 'Applying XP reward...'}
+                  </div>
+                </div>
+              )}
+
+              {rewardMessage && <div style={{ marginBottom: '16px', fontSize: '12px', color: colors.blue500 }}>{rewardMessage}</div>}
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => setShowRewardPopup(false)} style={{ flex: 1, height: '42px', borderRadius: '10px', border: `1px solid ${colors.borderDefault}`, backgroundColor: 'transparent', color: colors.textMuted, cursor: 'pointer' }}>
+                  Later
+                </button>
+                <button onClick={handleClaimReward} style={{ flex: 2, height: '42px', borderRadius: '10px', border: 'none', backgroundColor: colors.neon500, color: colors.bgBase, fontWeight: 700, cursor: 'pointer' }}>
+                  {pendingReward.isWinner ? 'Generate Premium NFT' : 'Claim XP'}
+                </button>
+              </div>
+            </div>
+          </div>
+          <style>{`@keyframes hqSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
     </div>
   );
 }

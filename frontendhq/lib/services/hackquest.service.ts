@@ -953,6 +953,46 @@ export const HackquestService = {
     } as UserProfile;
   },
 
+  async addBonusXp(amount: number, source = 'bonus') {
+    const safeAmount = Number(amount || 0);
+    if (!Number.isFinite(safeAmount) || safeAmount <= 0) {
+      return this.getCurrentUserProfile();
+    }
+
+    const profile = getProfile();
+    const nextTotalXp = Number(profile.totalXp || 0) + safeAmount;
+    const xpPerLevel = Number(process.env.NEXT_PUBLIC_XP_PER_LEVEL || 100);
+    const nextLevel = Math.max(1, Math.floor(nextTotalXp / xpPerLevel) + 1);
+
+    updateProfile({
+      totalXp: nextTotalXp,
+      level: nextLevel,
+      className: profile.className,
+    });
+
+    await this.getActivityFeed();
+
+    return {
+      source,
+      amount: safeAmount,
+      profile: await this.getCurrentUserProfile(),
+    };
+  },
+
+  async incrementNftCount(amount = 1) {
+    const safeAmount = Number(amount || 0);
+    if (!Number.isFinite(safeAmount) || safeAmount <= 0) {
+      return this.getCurrentUserProfile();
+    }
+
+    const profile = getProfile();
+    updateProfile({
+      nftCount: Number(profile.nftCount || 0) + safeAmount,
+    });
+
+    return this.getCurrentUserProfile();
+  },
+
   async listUsersForAdmin() {
     if (!isAdminSession()) {
       return [] as AdminUserInfo[];

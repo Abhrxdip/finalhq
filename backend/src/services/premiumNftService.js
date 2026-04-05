@@ -1,0 +1,279 @@
+const crypto = require('node:crypto');
+const { createClient } = require('@supabase/supabase-js');
+const { AppError } = require('../utils/http');
+
+const PREMIUM_CATEGORY_MAP = {
+  singularity: 'Singularity',
+  void: 'Void',
+  cipher: 'Cipher',
+  titan: 'Titan',
+  ether: 'Ether',
+};
+
+const GENERAL_PROMPT =
+  'centered object, no text, no letters, no logo, no human face, no character portrait, no watermark, no frame text, dark premium background, collectible card art, sharp focus, cinematic lighting';
+
+const CATEGORY_PROMPTS = {
+  Singularity:
+    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, a divine singularity core floating in the center, white-gold cosmic orb with violet energy rings, gravitational distortion field, event horizon fragments, radiant collapse energy, celestial black hole technology relic, ultra-rare god-tier artifact',
+  Void:
+    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, a forbidden void relic floating in the center, black obsidian shard with deep purple and crimson corruption aura, fractured space geometry, abyssal energy pulses, shadow distortion field, dark anti-energy crystal, legendary cursed artifact',
+  Cipher:
+    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, an encrypted cyber relic floating in the center, glowing cyan holographic cube with matrix glyphs and data shards, neon code streams, quantum intelligence aura, futuristic hacker artifact, digital secret core, legendary encoded object',
+  Titan:
+    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, a battle-forged titan relic floating in the center, massive metallic armored core with red-orange reactor glow, forged steel plates, mechanical power field, war-engine energy, ancient futuristic weaponized artifact, legendary domination object',
+  Ether:
+    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, an ethereal celestial relic floating in the center, translucent crystal core with cyan and pearl white light, divine flowing particles, spiritual energy ribbons, heavenly sci-fi aura, ascended intelligence artifact, legendary elegant object',
+};
+
+let cachedSupabaseClient = null;
+
+const getSupabaseClient = () => {
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceRoleKey) {
+    throw new AppError(500, 'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured');
+  }
+
+  if (!cachedSupabaseClient) {
+    cachedSupabaseClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        persistSession: false,
+      },
+    });
+  }
+
+  return cachedSupabaseClient;
+};
+
+const getSupabaseTable = () => process.env.SUPABASE_NFT_TABLE || 'nfts';
+const getSupabaseBucket = () => process.env.SUPABASE_NFT_BUCKET || 'nfts';
+
+const normalizeCategory = (value) => {
+  const raw = String(value || '').trim().toLowerCase();
+  const resolved = PREMIUM_CATEGORY_MAP[raw];
+
+  if (!resolved) {
+    throw new AppError(
+      400,
+      `category must be one of: ${Object.keys(PREMIUM_CATEGORY_MAP).join(', ')}`
+    );
+  }
+
+  return resolved;
+};
+
+const buildPrompt = ({ category, prompt = '' }) => {
+  const trimmedPrompt = String(prompt || '').trim();
+  const basePrompt = trimmedPrompt || CATEGORY_PROMPTS[category];
+  return `${basePrompt}, ${GENERAL_PROMPT}`;
+};
+
+const callStabilityCore = async ({ prompt }) => {
+  const apiKey = process.env.STABILITY_API_KEY;
+  if (!apiKey) {
+    throw new AppError(500, 'STABILITY_API_KEY is not configured');
+  }
+
+  const form = new FormData();
+  form.append('prompt', prompt);
+  form.append('aspect_ratio', '3:4');
+  form.append('output_format', 'png');
+
+  const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/core', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      Accept: 'image/*',
+    },
+    body: form,
+  });
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    throw new AppError(
+      502,
+      `Stability AI image generation failed with status ${response.status}`,
+      responseText.slice(0, 600)
+    );
+  }
+
+  const imageArrayBuffer = await response.arrayBuffer();
+  const mimeType = response.headers.get('content-type') || 'image/png';
+
+  return {
+    imageBuffer: Buffer.from(imageArrayBuffer),
+    mimeType,
+  };
+};
+
+const uploadToSupabaseStorage = async ({ imageBuffer, mimeType, filePrefix }) => {
+  const supabase = getSupabaseClient();
+  const bucket = getSupabaseBucket();
+  const dateSegment = new Date().toISOString().slice(0, 10);
+  const fileName = `${filePrefix}-${crypto.randomUUID()}.png`;
+  const storagePath = `prime-artifacts/${dateSegment}/${fileName}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(bucket)
+    .upload(storagePath, imageBuffer, {
+      contentType: mimeType,
+      upsert: false,
+      cacheControl: '3600',
+    });
+
+  if (uploadError) {
+    throw new AppError(502, 'Failed to upload generated NFT image to Supabase Storage', uploadError.message);
+  }
+
+  const { data } = supabase.storage.from(bucket).getPublicUrl(storagePath);
+
+  return {
+    storagePath,
+    publicUrl: data.publicUrl,
+  };
+};
+
+const insertNftMetadata = async (metadataRow) => {
+  const supabase = getSupabaseClient();
+  const table = getSupabaseTable();
+
+  const { data, error } = await supabase.from(table).insert([metadataRow]).select('*').single();
+
+  if (error) {
+    throw new AppError(502, 'Failed to insert generated NFT metadata into Supabase table', error.message);
+  }
+
+  return data;
+};
+
+const generateNft = async ({
+  name,
+  category,
+  prompt,
+  ownerId = null,
+  isMinted = false,
+  algoAssetId = null,
+  id = null,
+}) => {
+  const resolvedCategory = normalizeCategory(category);
+  const resolvedPrompt = buildPrompt({
+    category: resolvedCategory,
+    prompt,
+  });
+
+  const { imageBuffer, mimeType } = await callStabilityCore({
+    prompt: resolvedPrompt,
+  });
+
+  const { storagePath, publicUrl } = await uploadToSupabaseStorage({
+    imageBuffer,
+    mimeType,
+    filePrefix: resolvedCategory.toLowerCase(),
+  });
+
+  const metadataRow = {
+    ...(id ? { id } : {}),
+    name: String(name || `${resolvedCategory} Prime Artifact`),
+    category: resolvedCategory.toLowerCase(),
+    prompt: resolvedPrompt,
+    image_url: publicUrl,
+    owner_id: ownerId,
+    is_minted: Boolean(isMinted),
+    algo_asset_id: algoAssetId,
+    created_at: new Date().toISOString(),
+  };
+
+  const nft = await insertNftMetadata(metadataRow);
+
+  return {
+    nft,
+    storagePath,
+  };
+};
+
+const listMarketplaceNfts = async ({ limit = 100 } = {}) => {
+  const supabase = getSupabaseClient();
+  const table = getSupabaseTable();
+  const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 100;
+
+  const { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(safeLimit);
+
+  if (error) {
+    throw new AppError(502, 'Failed to fetch NFT marketplace records', error.message);
+  }
+
+  return data || [];
+};
+
+const listOwnerInventory = async ({ ownerId, limit = 100 } = {}) => {
+  if (!ownerId) {
+    throw new AppError(400, 'ownerId is required');
+  }
+
+  const supabase = getSupabaseClient();
+  const table = getSupabaseTable();
+  const safeLimit = Number.isFinite(Number(limit)) ? Number(limit) : 100;
+
+  const { data, error } = await supabase
+    .from(table)
+    .select('*')
+    .eq('owner_id', ownerId)
+    .order('created_at', { ascending: false })
+    .limit(safeLimit);
+
+  if (error) {
+    throw new AppError(502, 'Failed to fetch owner NFT inventory', error.message);
+  }
+
+  return data || [];
+};
+
+const claimNft = async ({ nftId, ownerId, algoAssetId = null } = {}) => {
+  if (!nftId) {
+    throw new AppError(400, 'nftId is required');
+  }
+
+  if (!ownerId) {
+    throw new AppError(400, 'ownerId is required');
+  }
+
+  const supabase = getSupabaseClient();
+  const table = getSupabaseTable();
+
+  const updatePayload = {
+    owner_id: ownerId,
+    is_minted: true,
+    ...(algoAssetId ? { algo_asset_id: algoAssetId } : {}),
+  };
+
+  const { data, error } = await supabase
+    .from(table)
+    .update(updatePayload)
+    .eq('id', nftId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new AppError(502, 'Failed to claim NFT record', error.message);
+  }
+
+  return data;
+};
+
+module.exports = {
+  PREMIUM_CATEGORY_MAP,
+  CATEGORY_PROMPTS,
+  GENERAL_PROMPT,
+  normalizeCategory,
+  buildPrompt,
+  generateNft,
+  listMarketplaceNfts,
+  listOwnerInventory,
+  claimNft,
+};
