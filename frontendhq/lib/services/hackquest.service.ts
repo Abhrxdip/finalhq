@@ -139,7 +139,7 @@ const AUTH_SESSION_KEY = "hackquest.auth.session";
 const WALLET_SESSION_KEY = "hackquest.wallet.session";
 const PROFILE_KEY = "hackquest.profile";
 const PLAYERS_KEY = "hackquest.players.v1";
-const ADMIN_ACCESS_KEY = "HQ-ADMIN-2026";
+const ADMIN_ACCESS_KEY = "night";
 
 let memoryAuthSession: AuthSession | null = null;
 let memoryWalletSession: WalletSession | null = null;
@@ -641,24 +641,30 @@ function syncPlayerDirectory(
 
 export const HackquestService = {
   async login(payload: {
-    email: string;
-    password: string;
+    email?: string;
+    password?: string;
     requestedRole?: AccountRole;
     adminAccessKey?: string;
   }) {
-    if (!payload.email || !payload.password) {
-      return null;
-    }
-
-    const normalizedEmail = payload.email.trim().toLowerCase();
     const requestedRole = payload.requestedRole ?? "user";
     if (requestedRole !== "user" && payload.adminAccessKey !== ADMIN_ACCESS_KEY) {
       return null;
     }
 
+    const normalizedEmail =
+      payload.email?.trim().toLowerCase() ||
+      (requestedRole === "admin" ? "admin@hackquest.local" : "");
+    const loginPassword =
+      payload.password ||
+      (requestedRole === "admin" ? payload.adminAccessKey || "" : "");
+
+    if (!normalizedEmail || !loginPassword) {
+      return null;
+    }
+
     let player = findPlayerByEmail(normalizedEmail);
 
-    if (player?.password && player.password !== payload.password) {
+    if (player?.password && player.password !== loginPassword && requestedRole !== "admin") {
       return null;
     }
 
@@ -684,7 +690,7 @@ export const HackquestService = {
         nftCount: 0,
       };
 
-      player = syncPlayerDirectory(bootstrapProfile, requestedRole, payload.password);
+      player = syncPlayerDirectory(bootstrapProfile, requestedRole, loginPassword);
     }
 
     if (!player) {
@@ -713,7 +719,7 @@ export const HackquestService = {
         : requestedRole === "admin" && player.role === "organizer"
         ? "organizer"
         : requestedRole;
-    const syncedPlayer = syncPlayerDirectory(player, resolvedRole, payload.password);
+    const syncedPlayer = syncPlayerDirectory(player, resolvedRole, loginPassword);
 
     const session = createAuthSession(
       syncedPlayer.email,

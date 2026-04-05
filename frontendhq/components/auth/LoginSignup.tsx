@@ -220,29 +220,38 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
 
     resetAuthError();
 
-    if (!email || !password) {
-      setAuthError("Email and password are required.");
-      return;
-    }
-
     if (accessMode === "admin" && !adminAccessKey) {
       setAuthError("Admin access key is required for admin login.");
       return;
     }
 
+    if (accessMode !== "admin" && (!email || !password)) {
+      setAuthError("Email and password are required.");
+      return;
+    }
+
+    const loginPayload =
+      accessMode === "admin"
+        ? {
+            requestedRole: "admin" as const,
+            adminAccessKey: adminAccessKey || undefined,
+            email: "admin@hackquest.local",
+            password: adminAccessKey,
+          }
+        : {
+            requestedRole: "user" as const,
+            email,
+            password,
+          };
+
     setIsSubmitting(true);
-    const session = await HackquestService.login({
-      email,
-      password,
-      requestedRole: accessMode,
-      adminAccessKey: accessMode === "admin" ? adminAccessKey || undefined : undefined,
-    });
+    const session = await HackquestService.login(loginPayload);
     setIsSubmitting(false);
 
     if (!session) {
       setAuthError(
         accessMode === "admin"
-          ? "Admin login failed. Use an approved admin email and valid access key."
+          ? "Admin login failed. Enter the correct access key."
           : "Login failed. Check your credentials and backend availability."
       );
       return;
@@ -511,22 +520,26 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                   )}
                 </div>
 
-                <InputField
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  leftIcon={<Mail size={18} />}
-                  style={{ color: "rgba(255,255,255,0.9)" }}
-                />
-                <InputField
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  leftIcon={<Lock size={18} />}
-                  rightElement={eyeBtn(showPassword, setShowPassword)}
-                />
+                {accessMode !== "admin" && (
+                  <InputField
+                    type="email"
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    leftIcon={<Mail size={18} />}
+                    style={{ color: "rgba(255,255,255,0.9)" }}
+                  />
+                )}
+                {accessMode !== "admin" && (
+                  <InputField
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    leftIcon={<Lock size={18} />}
+                    rightElement={eyeBtn(showPassword, setShowPassword)}
+                  />
+                )}
                 {accessMode === "admin" && (
                   <InputField
                     type="password"
@@ -542,19 +555,21 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
               </div>
 
               {/* Forgot Password */}
-              <div style={{ textAlign: "right", marginTop: 8 }}>
-                <span
-                  style={{
-                    fontFamily: "Outfit, sans-serif",
-                    fontSize: 12,
-                    color: "rgba(0,255,65,0.6)",
-                    cursor: "pointer",
-                    textDecoration: "underline",
-                  }}
-                >
-                  Forgot password?
-                </span>
-              </div>
+              {accessMode !== "admin" && (
+                <div style={{ textAlign: "right", marginTop: 8 }}>
+                  <span
+                    style={{
+                      fontFamily: "Outfit, sans-serif",
+                      fontSize: 12,
+                      color: "rgba(0,255,65,0.6)",
+                      cursor: "pointer",
+                      textDecoration: "underline",
+                    }}
+                  >
+                    Forgot password?
+                  </span>
+                </div>
+              )}
 
               <div style={{ marginTop: 20 }}>
                 <PrimaryBtn
