@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Background } from "@/components/layout/Background";
+import { Sidebar } from "@/components/layout/Sidebar";
 import { colors } from "@/lib/design-tokens";
 import { HackquestService } from "@/lib/services/hackquest.service";
 import { useNavigate } from "@/lib/router-compat";
@@ -64,6 +65,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <div style={{ display: "flex", minHeight: "100vh", position: "relative" }}>
       <Background />
+      <Sidebar />
       <div
         style={{
           flex: 1,
