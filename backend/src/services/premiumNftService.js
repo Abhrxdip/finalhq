@@ -78,7 +78,7 @@ const callStabilityCore = async ({ prompt }) => {
 
   const form = new FormData();
   form.append('prompt', prompt);
-  form.append('aspect_ratio', '3:4');
+  form.append('aspect_ratio', '2:3');
   form.append('output_format', 'png');
 
   const response = await fetch('https://api.stability.ai/v2beta/stable-image/generate/core', {
