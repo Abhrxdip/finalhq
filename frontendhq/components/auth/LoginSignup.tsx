@@ -154,7 +154,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
   const [btnHovered, setBtnHovered] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [accessMode, setAccessMode] = useState<"user" | "organizer" | "admin">("user");
+  const [accessMode, setAccessMode] = useState<"user" | "admin">("user");
   const [adminAccessKey, setAdminAccessKey] = useState("");
 
   const strength = getPasswordStrength(password);
@@ -225,8 +225,8 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
       return;
     }
 
-    if (accessMode !== "user" && !adminAccessKey) {
-      setAuthError("Privileged access key is required for organizer/admin login.");
+    if (accessMode === "admin" && !adminAccessKey) {
+      setAuthError("Admin access key is required for admin login.");
       return;
     }
 
@@ -235,7 +235,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
       email,
       password,
       requestedRole: accessMode,
-      adminAccessKey: accessMode !== "user" ? adminAccessKey || undefined : undefined,
+      adminAccessKey: accessMode === "admin" ? adminAccessKey || undefined : undefined,
     });
     setIsSubmitting(false);
 
@@ -243,8 +243,6 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
       setAuthError(
         accessMode === "admin"
           ? "Admin login failed. Use an approved admin email and valid access key."
-          : accessMode === "organizer"
-          ? "Organizer login failed. Use an approved organizer email and valid access key."
           : "Login failed. Check your credentials and backend availability."
       );
       return;
@@ -465,10 +463,9 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                     <Shield size={14} />
                     Access Mode
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                     {([
                       { key: "user", label: "User Workspace" },
-                      { key: "organizer", label: "Organizer Console" },
                       { key: "admin", label: "Admin Console" },
                     ] as const).map((mode) => (
                       <button
@@ -498,7 +495,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                       </button>
                     ))}
                   </div>
-                  {accessMode !== "user" && (
+                  {accessMode === "admin" && (
                     <div style={{ marginTop: 10, display: "grid", gap: 8 }}>
                       <div
                         style={{
@@ -508,7 +505,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                           color: "rgba(255,255,255,0.82)",
                         }}
                       >
-                        Admin access key is required for organizer/admin sign-in.
+                        Admin access key is required for admin sign-in.
                       </div>
                     </div>
                   )}
@@ -530,10 +527,10 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                   leftIcon={<Lock size={18} />}
                   rightElement={eyeBtn(showPassword, setShowPassword)}
                 />
-                {accessMode !== "user" && (
+                {accessMode === "admin" && (
                   <InputField
                     type="password"
-                    placeholder="Privileged access key"
+                    placeholder="Admin access key"
                     value={adminAccessKey}
                     onChange={(e) => {
                       resetAuthError();

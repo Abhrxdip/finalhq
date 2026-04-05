@@ -695,11 +695,24 @@ export const HackquestService = {
       return null;
     }
 
-    if (requestedRole !== "user" && player.role !== requestedRole) {
+    if (
+      requestedRole === "admin" &&
+      player.role !== "admin" &&
+      player.role !== "organizer"
+    ) {
       return null;
     }
 
-    const resolvedRole: AccountRole = requestedRole === "user" ? player.role : requestedRole;
+    if (requestedRole === "organizer" && player.role !== "organizer") {
+      return null;
+    }
+
+    const resolvedRole: AccountRole =
+      requestedRole === "user"
+        ? "user"
+        : requestedRole === "admin" && player.role === "organizer"
+        ? "organizer"
+        : requestedRole;
     const syncedPlayer = syncPlayerDirectory(player, resolvedRole, payload.password);
 
     const session = createAuthSession(
