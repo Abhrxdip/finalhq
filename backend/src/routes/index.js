@@ -8,6 +8,7 @@ const leaderboardRoutes = require('./leaderboardRoutes');
 const activityRoutes = require('./activityRoutes');
 const nftRoutes = require('./nftRoutes');
 const blockchainRoutes = require('./blockchainRoutes');
+const premiumNftRoutes = require('./premiumNftRoutes');
 
 const router = express.Router();
 
@@ -20,5 +21,6 @@ router.use('/leaderboard', leaderboardRoutes);
 router.use('/activity', activityRoutes);
 router.use('/nfts', nftRoutes);
 router.use('/algo', blockchainRoutes);
+router.use('/', premiumNftRoutes);
 
 module.exports = router;

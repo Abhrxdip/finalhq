@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Background } from "@/components/layout/Background";
 import { Sidebar } from "@/components/layout/Sidebar";
-import { TopBar } from "@/components/layout/TopBar";
 import { colors } from "@/lib/design-tokens";
 import { HackquestService } from "@/lib/services/hackquest.service";
 import { useNavigate } from "@/lib/router-compat";
@@ -77,7 +76,6 @@ export function DashboardShell({ children }: DashboardShellProps) {
           zIndex: 1,
         }}
       >
-        <TopBar />
         <main
           style={{
             flex: 1,

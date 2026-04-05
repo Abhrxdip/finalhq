@@ -126,7 +126,7 @@ export function EventPage() {
         <div style={{ padding: '48px 32px', textAlign: 'center', position: 'relative' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '16px' }}>
             <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colors.neon500, animation: 'pulse 2s infinite' }} />
-            <span style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500 }}>{eventStatus} EVENT</span>
+            <span style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500 }}>{eventStatus} QUEST</span>
             <span style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: backendStatus === 'ONLINE' ? colors.neon500 : colors.red500 }}>
               API {backendStatus}
             </span>
@@ -174,7 +174,7 @@ export function EventPage() {
 
       {/* Three-column body */}
       <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr 280px', gap: '24px', alignItems: 'start' }}>
-        {/* Left — Event info */}
+        {/* Left — Quest info */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', padding: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -195,7 +195,7 @@ export function EventPage() {
               </div>
             ))}
             <button onClick={() => navigate('/team')} style={{ width: '100%', height: '44px', backgroundColor: colors.neon500, color: colors.bgBase, borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', marginTop: '16px' }}>
-              JOIN EVENT
+              JOIN QUEST
             </button>
             <button style={{ width: '100%', height: '44px', backgroundColor: 'transparent', color: colors.textPrimary, borderRadius: '10px', border: `1px solid ${colors.borderDefault}`, fontFamily: fonts.outfit, fontSize: '14px', cursor: 'pointer', marginTop: '8px' }}>
               VIEW RULES
@@ -215,10 +215,10 @@ export function EventPage() {
 
           {activeTab === 'Overview' && (
             <div>
-              <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500, marginBottom: '10px' }}>ABOUT THIS EVENT</div>
+              <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500, marginBottom: '10px' }}>ABOUT THIS QUEST</div>
               <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '20px' }}>HackQuest Genesis Season 01 is the flagship Algorand hackathon bringing together the brightest blockchain developers worldwide. Compete across 4 specialized tracks, earn XP, mint exclusive NFTs, and claim your place on the global leaderboard.</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                {[['🌍', 'Global Event', '1,247 participants from 68 countries'], ['⚡', 'XP Racing', 'Compete for XP across all 4 tracks'], ['🎖️', 'NFT Rewards', 'Exclusive on-chain badges for top performers'], ['◆', 'Algorand Native', 'All rewards minted on Algorand mainnet']].map(([icon, title, desc]) => (
+                {[['🌍', 'Global Quest', '1,247 participants from 68 countries'], ['⚡', 'XP Racing', 'Compete for XP across all 4 tracks'], ['🎖️', 'NFT Rewards', 'Exclusive on-chain badges for top performers'], ['◆', 'Algorand Native', 'All rewards minted on Algorand mainnet']].map(([icon, title, desc]) => (
                   <div key={title as string} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: `1px solid ${colors.borderSubtle}`, borderRadius: '12px', padding: '16px' }}>
                     <div style={{ fontSize: '24px', marginBottom: '8px' }}>{icon}</div>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: colors.textPrimary, marginBottom: '4px' }}>{title}</div>

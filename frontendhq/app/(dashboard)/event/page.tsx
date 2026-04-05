@@ -1,5 +1,5 @@
-import { EventPage } from "@/components/pages/EventPage";
+import { redirect } from "next/navigation";
 
 export default function EventRoute() {
-  return <EventPage />;
+  redirect('/quests');
 }

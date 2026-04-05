@@ -7,6 +7,20 @@ import { colors, fonts } from '@/lib/design-tokens';
 import { appNavItems } from '@/components/layout/navigation';
 import { HackquestService } from '@/lib/services/hackquest.service';
 
+const ADMIN_NAV_PATHS = ['/dashboard', '/quests', '/admin', '/leaderboard', '/marketplace', '/settings'];
+const PLAYER_NAV_PATHS = [
+  '/dashboard',
+  '/quests',
+  '/team',
+  '/leaderboard',
+  '/profile/cipher_hawk',
+  '/marketplace',
+  '/activity',
+  '/wallet',
+  '/notifications',
+  '/settings',
+];
+
 export function Sidebar() {
   const location = useLocation();
   const [isAdmin, setIsAdmin] = React.useState(false);
@@ -57,7 +71,10 @@ export function Sidebar() {
   };
 
   const visibleNavItems = React.useMemo(
-    () => appNavItems.filter((item) => item.path !== '/admin' || isAdmin),
+    () => {
+      const allowedPaths = isAdmin ? ADMIN_NAV_PATHS : PLAYER_NAV_PATHS;
+      return appNavItems.filter((item) => allowedPaths.includes(item.path));
+    },
     [isAdmin]
   );
 
