@@ -11,19 +11,19 @@ const PREMIUM_CATEGORY_MAP = {
 };
 
 const GENERAL_PROMPT =
-  'centered object, no text, no letters, no logo, no human face, no character portrait, no watermark, no frame text, dark premium background, collectible card art, sharp focus, cinematic lighting';
+  'include dragons or mythical legendary creatures as the core subject, no text, no letters, no logo, no human face, no watermark, no frame text, collectible card art, sharp focus, cinematic fantasy lighting';
 
 const CATEGORY_PROMPTS = {
   Singularity:
-    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, a divine singularity core floating in the center, white-gold cosmic orb with violet energy rings, gravitational distortion field, event horizon fragments, radiant collapse energy, celestial black hole technology relic, ultra-rare god-tier artifact',
+    'ultra-premium fantasy collectible NFT card art, legendary cosmic dragon coiled around a singularity core, radiant scales, celestial nebula storm, arcane particles, dramatic rim light, high detail, centered composition, heroic mythic atmosphere, elite game reward quality',
   Void:
-    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, a forbidden void relic floating in the center, black obsidian shard with deep purple and crimson corruption aura, fractured space geometry, abyssal energy pulses, shadow distortion field, dark anti-energy crystal, legendary cursed artifact',
+    'ultra-premium fantasy collectible NFT card art, abyssal shadow dragon emerging from a void rift, obsidian horns, crimson and violet smoke, cursed relic fragments, dark epic background, high detail, centered composition, intimidating legendary creature mood',
   Cipher:
-    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, an encrypted cyber relic floating in the center, glowing cyan holographic cube with matrix glyphs and data shards, neon code streams, quantum intelligence aura, futuristic hacker artifact, digital secret core, legendary encoded object',
+    'ultra-premium fantasy collectible NFT card art, runic dragon guardian with floating glyph tablets, enchanted sapphire fire, mystic code sigils, ancient temple ambience, high detail, centered composition, arcane legendary creature design',
   Titan:
-    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, a battle-forged titan relic floating in the center, massive metallic armored core with red-orange reactor glow, forged steel plates, mechanical power field, war-engine energy, ancient futuristic weaponized artifact, legendary domination object',
+    'ultra-premium fantasy collectible NFT card art, colossal armored drake and titan beast fusion, molten chest core, volcanic sparks, battle-scarred scales, cinematic smoke, high detail, centered composition, mythic warlord creature aesthetic',
   Ether:
-    'ultra-premium futuristic collectible NFT card art, centered legendary artifact, dark cinematic background, glowing energy aura, holographic detailing, elite game reward design, high detail, symmetrical composition, dramatic lighting, no text, no humans, no watermark, collectible rarity aesthetic, an ethereal celestial relic floating in the center, translucent crystal core with cyan and pearl white light, divine flowing particles, spiritual energy ribbons, heavenly sci-fi aura, ascended intelligence artifact, legendary elegant object',
+    'ultra-premium fantasy collectible NFT card art, celestial phoenix-griffin spirit with luminous wings, floating crystal halo, moonlit clouds, pearl and cyan aura, sacred wind trails, high detail, centered composition, elegant mythical creature style',
 };
 
 let cachedSupabaseClient = null;

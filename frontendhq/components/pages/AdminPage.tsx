@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useNavigate } from '@/lib/router-compat';
-import { CheckCircle, XCircle, ExternalLink, Search, Sparkles, Crown } from 'lucide-react';
+import { CheckCircle, XCircle, ExternalLink, Search, Crown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { colors, fonts } from '@/lib/design-tokens';
 import { HackquestService, type AdminUserInfo, type LeaderboardView } from '@/lib/services/hackquest.service';
@@ -12,7 +12,6 @@ import {
   type OrganizerEvent,
   type OrganizerRankingRow,
   type PremiumNftCategory,
-  type PrimeArtifactItem,
 } from '@/lib/services/premium-events.service';
 
 const adminSectionIds = [
@@ -108,10 +107,8 @@ export function AdminPage() {
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
   const [selectedUserInfo, setSelectedUserInfo] = useState<AdminUserInfo | null>(null);
   const [organizerEvents, setOrganizerEvents] = useState<OrganizerEvent[]>([]);
-  const [primeArtifacts, setPrimeArtifacts] = useState<PrimeArtifactItem[]>([]);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [eventMessage, setEventMessage] = useState<string | null>(null);
-  const [isGeneratingArtifact, setIsGeneratingArtifact] = useState<PremiumNftCategory | null>(null);
   const [isSavingEvent, setIsSavingEvent] = useState(false);
   const [rankingRows, setRankingRows] = useState<OrganizerRankingRow[]>([]);
   const [eventForm, setEventForm] = useState({
@@ -129,18 +126,16 @@ export function AdminPage() {
     let active = true;
 
     (async () => {
-      const [remoteLeaderboard, session, remoteEvents, marketplaceArtifacts] = await Promise.all([
+      const [remoteLeaderboard, session, remoteEvents] = await Promise.all([
         HackquestService.getLeaderboard(),
         HackquestService.getAuthMe(),
         PremiumEventsService.getOrganizerEvents(),
-        PremiumEventsService.getPrimeArtifactsMarketplace(),
       ]);
 
       if (!active) return;
       setLeaderboardList(remoteLeaderboard);
       setIsAdmin(session.authUser?.role === 'admin');
       setOrganizerEvents(remoteEvents);
-      setPrimeArtifacts(marketplaceArtifacts);
 
       if (remoteEvents[0]) {
         setEditingEventId(remoteEvents[0].id);
@@ -432,26 +427,6 @@ export function AdminPage() {
       );
     } catch (error) {
       setEventMessage(error instanceof Error ? error.message : 'Unable to save rankings');
-    }
-  };
-
-  const handleGeneratePrimeArtifact = async (category: PremiumNftCategory) => {
-    setIsGeneratingArtifact(category);
-    setEventMessage(`Generating ${category} Prime Artifact with Stability AI...`);
-
-    try {
-      await PremiumEventsService.generatePrimeArtifact({
-        category,
-        name: `${category} Prime Artifact`,
-      });
-
-      const refreshed = await PremiumEventsService.getPrimeArtifactsMarketplace();
-      setPrimeArtifacts(refreshed);
-      setEventMessage(`${category} artifact generated and published to NFT Marketplace.`);
-    } catch (error) {
-      setEventMessage(error instanceof Error ? error.message : `Failed to generate ${category} artifact`);
-    } finally {
-      setIsGeneratingArtifact(null);
     }
   };
 
@@ -918,73 +893,6 @@ export function AdminPage() {
                       </button>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              <div
-                style={{
-                  backgroundColor: colors.bgCard,
-                  border: `1px solid ${colors.borderDefault}`,
-                  borderRadius: '16px',
-                  padding: '18px',
-                  marginBottom: '18px',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
-                  <div>
-                    <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.purple500 }}>
-                      PRIME ARTIFACTS
-                    </div>
-                    <div style={{ fontSize: '12px', color: colors.textMuted }}>
-                      Generate Premium NFT images with Stability AI and publish to marketplace.
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
-                  {premiumCategories.map((category) => {
-                    const existing = primeArtifacts.find((item) => item.category === category);
-                    return (
-                      <div key={category} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: `1px solid ${colors.borderSubtle}`, borderRadius: '12px', padding: '10px' }}>
-                        <div style={{ width: '100%', aspectRatio: '3 / 4', borderRadius: '10px', overflow: 'hidden', border: `1px solid ${colors.borderSubtle}`, marginBottom: '8px' }}>
-                          {existing ? (
-                            <img src={existing.imageUrl} alt={existing.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          ) : (
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: colors.textMuted }}>
-                              No image
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
-                          {category}
-                        </div>
-                        <button
-                          onClick={() => handleGeneratePrimeArtifact(category)}
-                          disabled={isGeneratingArtifact === category}
-                          style={{
-                            width: '100%',
-                            height: '32px',
-                            backgroundColor: colors.purple500,
-                            color: '#fff',
-                            borderRadius: '8px',
-                            border: 'none',
-                            fontSize: '12px',
-                            fontWeight: 700,
-                            cursor: isGeneratingArtifact === category ? 'not-allowed' : 'pointer',
-                            opacity: isGeneratingArtifact === category ? 0.7 : 1,
-                          }}
-                        >
-                          {isGeneratingArtifact === category ? (
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                              <Sparkles size={12} /> Generating...
-                            </span>
-                          ) : (
-                            'Generate Artifact'
-                          )}
-                        </button>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
 
