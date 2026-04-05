@@ -2,13 +2,21 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
-import { LayoutDashboard, Zap, FileText, Award, Trophy, Users, Settings, CheckCircle, XCircle, ExternalLink, Search } from 'lucide-react';
+import { LayoutDashboard, Zap, FileText, Award, Trophy, Users, Settings, CheckCircle, XCircle, ExternalLink, Search, CalendarPlus, Sparkles, Crown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { colors, fonts } from '@/lib/design-tokens';
 import { HackquestService, type AdminUserInfo, type LeaderboardView, type QuestView } from '@/lib/services/hackquest.service';
+import {
+  PremiumEventsService,
+  type OrganizerEvent,
+  type OrganizerRankingRow,
+  type PremiumNftCategory,
+  type PrimeArtifactItem,
+} from '@/lib/services/premium-events.service';
 
 const adminNavItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'events', label: 'Events', icon: CalendarPlus },
   { id: 'quests', label: 'Quests', icon: Zap },
   { id: 'submissions', label: 'Submissions', icon: FileText },
   { id: 'nft-minting', label: 'NFT Minting', icon: Award },
@@ -38,6 +46,39 @@ const metricCards = [
   { label: 'Leaderboard Updates', value: '847', delta: 'Last 1h', color: colors.gold500 },
 ];
 
+const premiumCategories = PremiumEventsService.getPremiumNftCategories();
+
+const formatDateTime = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return 'Invalid date';
+  }
+
+  return date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
+const fileToDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      if (!result) {
+        reject(new Error('Unable to read selected poster file'));
+        return;
+      }
+
+      resolve(result);
+    };
+    reader.onerror = () => reject(new Error('Unable to read selected poster file'));
+    reader.readAsDataURL(file);
+  });
+
 export function AdminPage() {
   const navigate = useNavigate();
   const [questList, setQuestList] = useState<QuestView[]>([]);
@@ -54,21 +95,50 @@ export function AdminPage() {
   const [userLookup, setUserLookup] = useState('');
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
   const [selectedUserInfo, setSelectedUserInfo] = useState<AdminUserInfo | null>(null);
+  const [organizerEvents, setOrganizerEvents] = useState<OrganizerEvent[]>([]);
+  const [primeArtifacts, setPrimeArtifacts] = useState<PrimeArtifactItem[]>([]);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [eventMessage, setEventMessage] = useState<string | null>(null);
+  const [isGeneratingArtifact, setIsGeneratingArtifact] = useState<PremiumNftCategory | null>(null);
+  const [isSavingEvent, setIsSavingEvent] = useState(false);
+  const [rankingRows, setRankingRows] = useState<OrganizerRankingRow[]>([]);
+  const [eventForm, setEventForm] = useState({
+    posterUrl: '',
+    eventName: '',
+    eventDateTime: '',
+    premiumNftCategory: 'Singularity' as PremiumNftCategory,
+  });
 
   useEffect(() => {
     let active = true;
 
     (async () => {
-      const [remoteQuests, remoteLeaderboard, session] = await Promise.all([
+      const [remoteQuests, remoteLeaderboard, session, remoteEvents, marketplaceArtifacts] = await Promise.all([
         HackquestService.getQuests(),
         HackquestService.getLeaderboard(),
         HackquestService.getAuthMe(),
+        PremiumEventsService.getOrganizerEvents(),
+        PremiumEventsService.getPrimeArtifactsMarketplace(),
       ]);
 
       if (!active) return;
       setQuestList(remoteQuests);
       setLeaderboardList(remoteLeaderboard);
       setIsAdmin(session.authUser?.role === 'admin');
+      setOrganizerEvents(remoteEvents);
+      setPrimeArtifacts(marketplaceArtifacts);
+
+      if (remoteEvents[0]) {
+        setEditingEventId(remoteEvents[0].id);
+        setEventForm({
+          posterUrl: remoteEvents[0].posterUrl,
+          eventName: remoteEvents[0].eventName,
+          eventDateTime: remoteEvents[0].eventDateTime.slice(0, 16),
+          premiumNftCategory: remoteEvents[0].premiumNftCategory,
+        });
+        setRankingRows(remoteEvents[0].rankings);
+      }
+
       setAuthChecked(true);
     })();
 
@@ -177,6 +247,195 @@ export function AdminPage() {
     setLookupMessage(`Audit log: ${details.username} data viewed by admin at ${new Date().toLocaleTimeString()}.`);
   };
 
+  const loadEventForEditing = (eventId: string) => {
+    const target = organizerEvents.find((event) => event.id === eventId);
+    if (!target) {
+      return;
+    }
+
+    setEditingEventId(target.id);
+    setEventForm({
+      posterUrl: target.posterUrl,
+      eventName: target.eventName,
+      eventDateTime: target.eventDateTime.slice(0, 16),
+      premiumNftCategory: target.premiumNftCategory,
+    });
+    setRankingRows(target.rankings);
+    setEventMessage(`Loaded ${target.eventName} for editing.`);
+  };
+
+  const resetEventForm = () => {
+    setEditingEventId(null);
+    setEventForm({
+      posterUrl: '',
+      eventName: '',
+      eventDateTime: '',
+      premiumNftCategory: 'Singularity',
+    });
+    setRankingRows([]);
+    setEventMessage('Ready to create a new event.');
+  };
+
+  const setRankingCell = (index: number, field: 'rank' | 'playerId', value: string) => {
+    setRankingRows((previous) => {
+      const next = [...previous];
+      const target = next[index] || {
+        rank: index + 1,
+        playerId: '',
+        xpAwarded: PremiumEventsService.getXpForRank(index + 1),
+        isWinner: index === 0,
+        badgeText: index === 0 ? 'WINNER • Premium NFT' : `${PremiumEventsService.getXpForRank(index + 1)} XP`,
+      };
+
+      if (field === 'rank') {
+        const parsed = Number(value);
+        target.rank = Number.isFinite(parsed) && parsed > 0 ? parsed : target.rank;
+      } else {
+        target.playerId = value;
+      }
+
+      target.isWinner = target.rank === 1;
+      target.xpAwarded = target.isWinner ? 0 : PremiumEventsService.getXpForRank(target.rank);
+      target.badgeText = target.isWinner ? 'WINNER • Premium NFT' : `${target.xpAwarded} XP`;
+      next[index] = target;
+
+      return next.sort((left, right) => left.rank - right.rank);
+    });
+  };
+
+  const addRankingRow = () => {
+    setRankingRows((previous) => {
+      const nextRank = previous.length > 0 ? Math.max(...previous.map((item) => item.rank)) + 1 : 1;
+      const isWinner = nextRank === 1;
+      const xpAwarded = isWinner ? 0 : PremiumEventsService.getXpForRank(nextRank);
+
+      return [
+        ...previous,
+        {
+          rank: nextRank,
+          playerId: '',
+          xpAwarded,
+          isWinner,
+          badgeText: isWinner ? 'WINNER • Premium NFT' : `${xpAwarded} XP`,
+        },
+      ];
+    });
+  };
+
+  const removeRankingRow = (index: number) => {
+    setRankingRows((previous) => previous.filter((_, currentIndex) => currentIndex !== index));
+  };
+
+  const handlePosterFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) {
+      return;
+    }
+
+    try {
+      const fileDataUrl = await fileToDataUrl(selectedFile);
+      setEventForm((previous) => ({
+        ...previous,
+        posterUrl: fileDataUrl,
+      }));
+      setEventMessage('Poster selected. Ratio target: 3:4.');
+    } catch (error) {
+      setEventMessage(error instanceof Error ? error.message : 'Unable to load poster file');
+    }
+  };
+
+  const handleSaveEvent = async () => {
+    if (!eventForm.posterUrl || !eventForm.eventName.trim() || !eventForm.eventDateTime) {
+      setEventMessage('Event poster, name, and date/time are required.');
+      return;
+    }
+
+    setIsSavingEvent(true);
+
+    try {
+      const payload = {
+        posterUrl: eventForm.posterUrl,
+        eventName: eventForm.eventName,
+        eventDateTime: new Date(eventForm.eventDateTime).toISOString(),
+        premiumNftCategory: eventForm.premiumNftCategory,
+      };
+
+      const savedEvent = editingEventId
+        ? await PremiumEventsService.updateOrganizerEvent(editingEventId, payload)
+        : await PremiumEventsService.createOrganizerEvent(payload);
+
+      const freshEvents = await PremiumEventsService.getOrganizerEvents();
+      setOrganizerEvents(freshEvents);
+      setEditingEventId(savedEvent.id);
+
+      const matched = freshEvents.find((event) => event.id === savedEvent.id);
+      setRankingRows(matched?.rankings || []);
+
+      setEventMessage(
+        editingEventId
+          ? `Updated ${savedEvent.eventName}.`
+          : `Created ${savedEvent.eventName}. Configure rankings in the update panel.`
+      );
+    } catch (error) {
+      setEventMessage(error instanceof Error ? error.message : 'Unable to save event');
+    } finally {
+      setIsSavingEvent(false);
+    }
+  };
+
+  const handleSaveRankings = async () => {
+    if (!editingEventId) {
+      setEventMessage('Save an event before assigning rankings.');
+      return;
+    }
+
+    try {
+      const preparedRankings = rankingRows
+        .map((row) => ({
+          rank: Number(row.rank),
+          playerId: String(row.playerId || '').trim().toLowerCase(),
+        }))
+        .filter((row) => Number.isFinite(row.rank) && row.rank > 0 && row.playerId);
+
+      if (preparedRankings.length === 0) {
+        setEventMessage('Add at least one player ranking to save.');
+        return;
+      }
+
+      const result = await PremiumEventsService.saveEventRankings(editingEventId, preparedRankings);
+      setRankingRows(result.event.rankings);
+
+      const freshEvents = await PremiumEventsService.getOrganizerEvents();
+      setOrganizerEvents(freshEvents);
+
+      setEventMessage(
+        `Rankings saved. Winner gets ${result.event.premiumNftCategory} Premium NFT and others receive XP rewards.`
+      );
+    } catch (error) {
+      setEventMessage(error instanceof Error ? error.message : 'Unable to save rankings');
+    }
+  };
+
+  const handleGeneratePrimeArtifact = async (category: PremiumNftCategory) => {
+    setIsGeneratingArtifact(category);
+    setEventMessage(`Generating ${category} Prime Artifact with Stability AI...`);
+
+    try {
+      await PremiumEventsService.generatePrimeArtifact({
+        category,
+        name: `${category} Prime Artifact`,
+      });
+
+      const refreshed = await PremiumEventsService.getPrimeArtifactsMarketplace();
+      setPrimeArtifacts(refreshed);
+      setEventMessage(`${category} artifact generated and published to NFT Marketplace.`);
+    } catch (error) {
+      setEventMessage(error instanceof Error ? error.message : `Failed to generate ${category} artifact`);
+    } finally {
+      setIsGeneratingArtifact(null);
+    }
+  };
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload?.length) {
       return (
@@ -275,6 +534,508 @@ export function AdminPage() {
               {chainActionMessage && (
                 <div style={{ marginTop: '12px', fontFamily: fonts.mono, fontSize: '11px', color: colors.blue500 }}>
                   {chainActionMessage}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* QUESTS */}
+          {activeSection === 'events' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
+                <h2 style={{ fontFamily: fonts.orbitron, fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>
+                  Organizer Events
+                </h2>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={resetEventForm}
+                    style={{
+                      height: '38px',
+                      backgroundColor: 'transparent',
+                      color: colors.textPrimary,
+                      borderRadius: '10px',
+                      border: `1px solid ${colors.borderDefault}`,
+                      fontFamily: fonts.outfit,
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      padding: '0 14px',
+                    }}
+                  >
+                    + New Event
+                  </button>
+                  <button
+                    onClick={handleSaveEvent}
+                    disabled={isSavingEvent}
+                    style={{
+                      height: '38px',
+                      backgroundColor: colors.neon500,
+                      color: colors.bgBase,
+                      borderRadius: '10px',
+                      border: 'none',
+                      fontFamily: fonts.outfit,
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: isSavingEvent ? 'not-allowed' : 'pointer',
+                      padding: '0 14px',
+                      opacity: isSavingEvent ? 0.7 : 1,
+                    }}
+                  >
+                    {editingEventId ? 'Save Event Update' : 'Create Event'}
+                  </button>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: colors.bgCard,
+                  border: `1px solid ${colors.borderDefault}`,
+                  borderRadius: '16px',
+                  padding: '18px',
+                  marginBottom: '18px',
+                }}
+              >
+                <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.neon500, marginBottom: '12px' }}>
+                  CREATE / UPDATE EVENT
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) minmax(220px, 260px)', gap: '14px' }}>
+                  <div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.textMuted, marginBottom: '6px' }}>
+                        EVENT POSTER (3:4)
+                      </div>
+                      <label
+                        htmlFor="event-poster-input"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          height: '34px',
+                          border: `1px solid ${colors.borderDefault}`,
+                          borderRadius: '8px',
+                          padding: '0 12px',
+                          color: colors.textPrimary,
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                          marginBottom: '8px',
+                        }}
+                      >
+                        Upload Poster
+                      </label>
+                      <input id="event-poster-input" type="file" accept="image/*" onChange={handlePosterFile} style={{ display: 'none' }} />
+
+                      <div
+                        style={{
+                          width: '240px',
+                          maxWidth: '100%',
+                          aspectRatio: '3 / 4',
+                          borderRadius: '12px',
+                          border: `1px solid ${colors.borderDefault}`,
+                          overflow: 'hidden',
+                          backgroundColor: 'rgba(255,255,255,0.03)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {eventForm.posterUrl ? (
+                          <img
+                            src={eventForm.posterUrl}
+                            alt="Event poster"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <span style={{ fontSize: '12px', color: colors.textMuted }}>Poster preview</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.textMuted, marginBottom: '6px' }}>
+                        EVENT NAME
+                      </div>
+                      <input
+                        value={eventForm.eventName}
+                        onChange={(event) =>
+                          setEventForm((previous) => ({
+                            ...previous,
+                            eventName: event.target.value,
+                          }))
+                        }
+                        placeholder="Enter event name"
+                        style={{
+                          width: '100%',
+                          height: '38px',
+                          backgroundColor: 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${colors.borderSubtle}`,
+                          borderRadius: '10px',
+                          color: colors.textPrimary,
+                          fontFamily: fonts.outfit,
+                          fontSize: '13px',
+                          padding: '0 12px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.textMuted, marginBottom: '6px' }}>
+                        DATE & TIME
+                      </div>
+                      <input
+                        type="datetime-local"
+                        value={eventForm.eventDateTime}
+                        onChange={(event) =>
+                          setEventForm((previous) => ({
+                            ...previous,
+                            eventDateTime: event.target.value,
+                          }))
+                        }
+                        style={{
+                          width: '100%',
+                          height: '38px',
+                          backgroundColor: 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${colors.borderSubtle}`,
+                          borderRadius: '10px',
+                          color: colors.textPrimary,
+                          fontFamily: fonts.outfit,
+                          fontSize: '13px',
+                          padding: '0 12px',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.textMuted, marginBottom: '6px' }}>
+                        REWARDS • PREMIUM NFT CATEGORY
+                      </div>
+                      <select
+                        value={eventForm.premiumNftCategory}
+                        onChange={(event) =>
+                          setEventForm((previous) => ({
+                            ...previous,
+                            premiumNftCategory: event.target.value as PremiumNftCategory,
+                          }))
+                        }
+                        style={{
+                          width: '100%',
+                          height: '38px',
+                          backgroundColor: 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${colors.borderSubtle}`,
+                          borderRadius: '10px',
+                          color: colors.textPrimary,
+                          fontFamily: fonts.outfit,
+                          fontSize: '13px',
+                          padding: '0 12px',
+                          outline: 'none',
+                        }}
+                      >
+                        {premiumCategories.map((category) => (
+                          <option key={category} value={category}>
+                            {category}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div
+                      style={{
+                        backgroundColor: 'rgba(123,47,255,0.08)',
+                        border: `1px solid ${colors.borderSubtle}`,
+                        borderRadius: '10px',
+                        padding: '10px',
+                        fontSize: '12px',
+                        color: colors.textSecondary,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Winner receives a Premium NFT.
+                      <br />
+                      Other ranked players receive XP from 100 down to 10.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: colors.bgCard,
+                  border: `1px solid ${colors.borderDefault}`,
+                  borderRadius: '16px',
+                  padding: '18px',
+                  marginBottom: '18px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.gold500 }}>
+                    UPDATE EVENT • RANKINGS
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={addRankingRow}
+                      style={{
+                        height: '32px',
+                        backgroundColor: 'transparent',
+                        color: colors.textPrimary,
+                        borderRadius: '8px',
+                        border: `1px solid ${colors.borderDefault}`,
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        padding: '0 12px',
+                      }}
+                    >
+                      + Add Rank
+                    </button>
+                    <button
+                      onClick={handleSaveRankings}
+                      style={{
+                        height: '32px',
+                        backgroundColor: colors.gold500,
+                        color: colors.bgBase,
+                        borderRadius: '8px',
+                        border: 'none',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        padding: '0 12px',
+                      }}
+                    >
+                      Save Rankings
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  {rankingRows.length === 0 && (
+                    <div
+                      style={{
+                        fontSize: '12px',
+                        color: colors.textMuted,
+                        backgroundColor: 'rgba(255,255,255,0.02)',
+                        border: `1px dashed ${colors.borderSubtle}`,
+                        borderRadius: '10px',
+                        padding: '12px',
+                      }}
+                    >
+                      Add ranking rows to distribute XP and assign winner NFT.
+                    </div>
+                  )}
+
+                  {rankingRows.map((row, index) => (
+                    <div
+                      key={`${row.rank}-${index}`}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '90px 1fr 140px 90px 38px',
+                        gap: '8px',
+                        alignItems: 'center',
+                        backgroundColor: row.isWinner ? 'rgba(255,215,0,0.08)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${row.isWinner ? 'rgba(255,215,0,0.3)' : colors.borderSubtle}`,
+                        borderRadius: '10px',
+                        padding: '10px',
+                      }}
+                    >
+                      <input
+                        type="number"
+                        min={1}
+                        value={row.rank}
+                        onChange={(event) => setRankingCell(index, 'rank', event.target.value)}
+                        style={{
+                          width: '100%',
+                          height: '32px',
+                          backgroundColor: 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${colors.borderSubtle}`,
+                          borderRadius: '8px',
+                          color: colors.textPrimary,
+                          fontSize: '12px',
+                          padding: '0 8px',
+                          outline: 'none',
+                        }}
+                      />
+                      <input
+                        value={row.playerId}
+                        onChange={(event) => setRankingCell(index, 'playerId', event.target.value)}
+                        placeholder="player username"
+                        style={{
+                          width: '100%',
+                          height: '32px',
+                          backgroundColor: 'rgba(255,255,255,0.03)',
+                          border: `1px solid ${colors.borderSubtle}`,
+                          borderRadius: '8px',
+                          color: colors.textPrimary,
+                          fontSize: '12px',
+                          padding: '0 10px',
+                          outline: 'none',
+                        }}
+                      />
+                      <div style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: row.isWinner ? colors.gold500 : colors.neon500 }}>
+                        {row.isWinner ? 'Premium NFT' : `${row.xpAwarded} XP`}
+                      </div>
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        height: '26px',
+                        borderRadius: '7px',
+                        backgroundColor: row.isWinner ? 'rgba(255,215,0,0.18)' : 'rgba(0,255,65,0.08)',
+                        border: `1px solid ${row.isWinner ? 'rgba(255,215,0,0.4)' : colors.neon300}`,
+                        fontFamily: fonts.mono,
+                        fontSize: '9px',
+                        letterSpacing: '1px',
+                        color: row.isWinner ? colors.gold500 : colors.neon500,
+                      }}>
+                        {row.isWinner ? (
+                          <>
+                            <Crown size={11} /> WINNER
+                          </>
+                        ) : (
+                          'RANK'
+                        )}
+                      </div>
+                      <button
+                        onClick={() => removeRankingRow(index)}
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          borderRadius: '8px',
+                          border: `1px solid rgba(255,68,68,0.35)`,
+                          backgroundColor: 'transparent',
+                          color: colors.red500,
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: colors.bgCard,
+                  border: `1px solid ${colors.borderDefault}`,
+                  borderRadius: '16px',
+                  padding: '18px',
+                  marginBottom: '18px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
+                  <div>
+                    <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.purple500 }}>
+                      PRIME ARTIFACTS
+                    </div>
+                    <div style={{ fontSize: '12px', color: colors.textMuted }}>
+                      Generate Premium NFT images with Stability AI and publish to marketplace.
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+                  {premiumCategories.map((category) => {
+                    const existing = primeArtifacts.find((item) => item.category === category);
+                    return (
+                      <div key={category} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: `1px solid ${colors.borderSubtle}`, borderRadius: '12px', padding: '10px' }}>
+                        <div style={{ width: '100%', aspectRatio: '3 / 4', borderRadius: '10px', overflow: 'hidden', border: `1px solid ${colors.borderSubtle}`, marginBottom: '8px' }}>
+                          {existing ? (
+                            <img src={existing.imageUrl} alt={existing.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', color: colors.textMuted }}>
+                              No image
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>
+                          {category}
+                        </div>
+                        <button
+                          onClick={() => handleGeneratePrimeArtifact(category)}
+                          disabled={isGeneratingArtifact === category}
+                          style={{
+                            width: '100%',
+                            height: '32px',
+                            backgroundColor: colors.purple500,
+                            color: '#fff',
+                            borderRadius: '8px',
+                            border: 'none',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            cursor: isGeneratingArtifact === category ? 'not-allowed' : 'pointer',
+                            opacity: isGeneratingArtifact === category ? 0.7 : 1,
+                          }}
+                        >
+                          {isGeneratingArtifact === category ? (
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <Sparkles size={12} /> Generating...
+                            </span>
+                          ) : (
+                            'Generate Artifact'
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div
+                style={{
+                  backgroundColor: colors.bgCard,
+                  border: `1px solid ${colors.borderDefault}`,
+                  borderRadius: '16px',
+                  padding: '18px',
+                }}
+              >
+                <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.textMuted, marginBottom: '10px' }}>
+                  EXISTING EVENTS
+                </div>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                  {organizerEvents.length === 0 && (
+                    <div style={{ fontSize: '12px', color: colors.textMuted, padding: '10px', border: `1px dashed ${colors.borderSubtle}`, borderRadius: '10px' }}>
+                      No organizer events yet.
+                    </div>
+                  )}
+
+                  {organizerEvents.map((event) => (
+                    <button
+                      key={event.id}
+                      onClick={() => loadEventForEditing(event.id)}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto',
+                        alignItems: 'center',
+                        gap: '10px',
+                        textAlign: 'left',
+                        backgroundColor: editingEventId === event.id ? 'rgba(0,255,65,0.08)' : 'rgba(255,255,255,0.02)',
+                        border: `1px solid ${editingEventId === event.id ? colors.neon300 : colors.borderSubtle}`,
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        cursor: 'pointer',
+                        color: colors.textPrimary,
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '13px', fontWeight: 700 }}>{event.eventName}</div>
+                        <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: colors.textMuted }}>
+                          {formatDateTime(event.eventDateTime)} • Premium NFT: {event.premiumNftCategory}
+                        </div>
+                      </div>
+                      <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '1px', color: colors.neon500 }}>
+                        {event.rankings.length} ranks
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {eventMessage && (
+                <div style={{ marginTop: '10px', fontFamily: fonts.mono, fontSize: '11px', color: colors.blue500 }}>
+                  {eventMessage}
                 </div>
               )}
             </div>

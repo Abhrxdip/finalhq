@@ -1,5 +1,5 @@
-import { ProfilePage } from "@/components/pages/ProfilePage";
+import { InventoryPage } from "@/components/pages/InventoryPage";
 
 export default function InventoryRoute() {
-  return <ProfilePage />;
+  return <InventoryPage />;
 }
