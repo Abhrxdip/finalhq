@@ -26,15 +26,19 @@ export function QuestPage() {
   const navigate = useNavigate();
   const [quests, setQuests] = useState<OrganizerEvent[]>([]);
   const [isPrivileged, setIsPrivileged] = useState(false);
+  const [joinedEventIds, setJoinedEventIds] = useState<string[]>([]);
+  const [joinMessage, setJoinMessage] = useState<string | null>(null);
+  const [joiningEventId, setJoiningEventId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
     (async () => {
-      const [session, createdQuests] = await Promise.all([
+      const [session, createdQuests, joinedIds] = await Promise.all([
         HackquestService.getAuthMe(),
         PremiumEventsService.getOrganizerEvents(),
+        PremiumEventsService.getCurrentUserJoinedEventIds(),
       ]);
 
       if (!active) {
@@ -45,6 +49,7 @@ export function QuestPage() {
         session.authUser?.role === 'admin' || session.authUser?.role === 'organizer'
       );
       setQuests(createdQuests);
+      setJoinedEventIds(joinedIds);
       setLoading(false);
     })();
 
@@ -52,6 +57,32 @@ export function QuestPage() {
       active = false;
     };
   }, []);
+
+  const handleJoinQuest = async (eventId: string, eventName: string) => {
+    if (isPrivileged || joiningEventId) {
+      return;
+    }
+
+    setJoiningEventId(eventId);
+    setJoinMessage(null);
+
+    try {
+      const result = await PremiumEventsService.joinQuest(eventId);
+      setJoinedEventIds((previous) =>
+        previous.includes(eventId) ? previous : [...previous, eventId]
+      );
+      setJoinMessage(
+        result.alreadyJoined
+          ? `You already joined ${eventName}.`
+          : `You joined ${eventName}.`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to join quest right now.';
+      setJoinMessage(message);
+    } finally {
+      setJoiningEventId(null);
+    }
+  };
 
   return (
     <div style={{ fontFamily: fonts.outfit }}>
@@ -64,7 +95,7 @@ export function QuestPage() {
             Created Quests
           </h1>
           <p style={{ marginTop: '8px', fontSize: '13px', color: colors.textMuted }}>
-            Player view is read-only and only shows quests created by organizers.
+            Players can join quests created by organizers. Joined quests are visible in admin panel.
           </p>
         </div>
 
@@ -87,6 +118,24 @@ export function QuestPage() {
           </button>
         )}
       </div>
+
+      {joinMessage && (
+        <div
+          style={{
+            backgroundColor: 'rgba(0,255,65,0.06)',
+            border: `1px solid ${colors.neon300}`,
+            borderRadius: '12px',
+            padding: '10px 14px',
+            marginBottom: '14px',
+            fontSize: '12px',
+            color: colors.neon500,
+            fontFamily: fonts.mono,
+            letterSpacing: '0.4px',
+          }}
+        >
+          {joinMessage}
+        </div>
+      )}
 
       {loading && (
         <div
@@ -122,6 +171,8 @@ export function QuestPage() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
           {quests.map((quest) => {
             const winner = quest.rankings.find((item) => item.rank === 1);
+            const isJoined = joinedEventIds.includes(quest.id);
+            const isJoining = joiningEventId === quest.id;
             return (
               <article
                 key={quest.id}
@@ -165,6 +216,28 @@ export function QuestPage() {
                     </div>
                   ) : (
                     <div style={{ fontSize: '12px', color: colors.textMuted }}>Rankings pending</div>
+                  )}
+
+                  {!isPrivileged && (
+                    <button
+                      onClick={() => handleJoinQuest(quest.id, quest.eventName)}
+                      disabled={isJoined || isJoining}
+                      style={{
+                        marginTop: '12px',
+                        width: '100%',
+                        height: '36px',
+                        borderRadius: '10px',
+                        border: isJoined ? `1px solid ${colors.neon300}` : 'none',
+                        backgroundColor: isJoined ? 'rgba(0,255,65,0.08)' : colors.neon500,
+                        color: isJoined ? colors.neon500 : colors.bgBase,
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: isJoined || isJoining ? 'default' : 'pointer',
+                        opacity: isJoining ? 0.75 : 1,
+                      }}
+                    >
+                      {isJoined ? 'Joined' : isJoining ? 'Joining...' : 'Join Quest'}
+                    </button>
                   )}
                 </div>
               </article>

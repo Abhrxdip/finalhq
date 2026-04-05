@@ -103,6 +103,7 @@ export function AdminPage() {
   const [lookupMessage, setLookupMessage] = useState<string | null>(null);
   const [selectedUserInfo, setSelectedUserInfo] = useState<AdminUserInfo | null>(null);
   const [organizerEvents, setOrganizerEvents] = useState<OrganizerEvent[]>([]);
+  const [joinedPlayersByEvent, setJoinedPlayersByEvent] = useState<Record<string, string[]>>({});
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [eventMessage, setEventMessage] = useState<string | null>(null);
   const [isSavingEvent, setIsSavingEvent] = useState(false);
@@ -136,10 +137,11 @@ export function AdminPage() {
     let active = true;
 
     (async () => {
-      const [remoteLeaderboard, session, remoteEvents] = await Promise.all([
+      const [remoteLeaderboard, session, remoteEvents, joinedByEvent] = await Promise.all([
         HackquestService.getLeaderboard(),
         HackquestService.getAuthMe(),
         PremiumEventsService.getOrganizerEvents(),
+        PremiumEventsService.getJoinedPlayersByEvent(),
       ]);
 
       if (!active) return;
@@ -148,6 +150,7 @@ export function AdminPage() {
         session.authUser?.role === 'admin' || session.authUser?.role === 'organizer'
       );
       setOrganizerEvents(remoteEvents);
+      setJoinedPlayersByEvent(joinedByEvent);
 
       if (remoteEvents[0]) {
         setEditingEventId(remoteEvents[0].id);
@@ -167,6 +170,19 @@ export function AdminPage() {
       active = false;
     };
   }, []);
+
+  const joinedPlayerSet = React.useMemo(() => {
+    const values = Object.values(joinedPlayersByEvent).flat();
+    return new Set(values.map((value) => value.toLowerCase()));
+  }, [joinedPlayersByEvent]);
+
+  const playerDisplayNameByUsername = React.useMemo(() => {
+    const map = new Map<string, string>();
+    leaderboardList.forEach((player) => {
+      map.set(player.username.toLowerCase(), player.displayName);
+    });
+    return map;
+  }, [leaderboardList]);
 
   const openSection = (section: AdminSectionId) => {
     setActiveSection(section);
@@ -1178,9 +1194,58 @@ export function AdminPage() {
                     <span style={{ fontFamily: fonts.mono, fontSize: '11px', color: colors.textMuted }}>{p.username}@hackquest.io</span>
                     <span style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: colors.neon500 }}>LVL {p.level}</span>
                     <span style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: colors.neon500 }}>⚡ {(p.xp / 1000).toFixed(1)}k</span>
-                    <span style={{ backgroundColor: colors.neon100, border: `1px solid ${colors.neon300}`, borderRadius: '6px', padding: '2px 6px', fontFamily: fonts.mono, fontSize: '9px', color: colors.neon500 }}>ACTIVE</span>
+                    {joinedPlayerSet.has(p.username.toLowerCase()) ? (
+                      <span style={{ backgroundColor: colors.blue100, border: '1px solid rgba(59,130,246,0.35)', borderRadius: '6px', padding: '2px 6px', fontFamily: fonts.mono, fontSize: '9px', color: colors.blue500 }}>JOINED</span>
+                    ) : (
+                      <span style={{ backgroundColor: colors.neon100, border: `1px solid ${colors.neon300}`, borderRadius: '6px', padding: '2px 6px', fontFamily: fonts.mono, fontSize: '9px', color: colors.neon500 }}>ACTIVE</span>
+                    )}
                   </div>
                 ))}
+              </div>
+
+              <div style={{ marginTop: '16px', backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', padding: '16px' }}>
+                <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.blue500, marginBottom: '10px' }}>
+                  QUEST JOIN STATUS
+                </div>
+
+                {organizerEvents.length === 0 ? (
+                  <div style={{ fontSize: '12px', color: colors.textMuted }}>No organizer quests created yet.</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: '10px' }}>
+                    {organizerEvents.map((event) => {
+                      const joinedUsers = joinedPlayersByEvent[event.id] || [];
+                      return (
+                        <div key={event.id} style={{ border: `1px solid ${colors.borderSubtle}`, borderRadius: '12px', padding: '12px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', marginBottom: joinedUsers.length > 0 ? '8px' : 0 }}>
+                            <div style={{ fontSize: '13px', fontWeight: 600, color: colors.textPrimary }}>{event.eventName}</div>
+                            <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: colors.blue500 }}>{joinedUsers.length} joined</span>
+                          </div>
+
+                          {joinedUsers.length > 0 && (
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {joinedUsers.map((username) => (
+                                <span
+                                  key={`${event.id}-${username}`}
+                                  style={{
+                                    border: '1px solid rgba(59,130,246,0.35)',
+                                    backgroundColor: colors.blue100,
+                                    borderRadius: '999px',
+                                    padding: '3px 9px',
+                                    fontFamily: fonts.mono,
+                                    fontSize: '10px',
+                                    color: colors.blue500,
+                                  }}
+                                >
+                                  {playerDisplayNameByUsername.get(username.toLowerCase()) || username}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}

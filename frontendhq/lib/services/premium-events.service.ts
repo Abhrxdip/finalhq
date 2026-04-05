@@ -48,6 +48,13 @@ export type PendingReward = {
   claimedAt: string | null;
 };
 
+export type QuestJoinRecord = {
+  id: string;
+  eventId: string;
+  playerId: string;
+  joinedAt: string;
+};
+
 type CreateOrUpdateEventInput = {
   posterUrl: string;
   eventName: string;
@@ -72,6 +79,7 @@ type GeneratePrimeArtifactInput = {
 const ORGANIZER_EVENTS_KEY = 'hackquest.organizer.events.v1';
 const PRIME_ARTIFACTS_KEY = 'hackquest.prime.artifacts.v1';
 const PENDING_REWARDS_KEY = 'hackquest.pending.rewards.v1';
+const QUEST_JOINS_KEY = 'hackquest.quest.joins.v1';
 
 const XP_BY_RANK = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
 
@@ -191,6 +199,8 @@ const writePrimeArtifacts = (artifacts: PrimeArtifactItem[]) => writeStoredJson(
 
 const readPendingRewards = () => readStoredJson<PendingReward[]>(PENDING_REWARDS_KEY, []);
 const writePendingRewards = (rewards: PendingReward[]) => writeStoredJson(PENDING_REWARDS_KEY, rewards);
+const readQuestJoins = () => readStoredJson<QuestJoinRecord[]>(QUEST_JOINS_KEY, []);
+const writeQuestJoins = (joins: QuestJoinRecord[]) => writeStoredJson(QUEST_JOINS_KEY, joins);
 
 const getPromptForCategory = (category: PremiumNftCategory, customPrompt?: string) => {
   const prompt = String(customPrompt || '').trim();
@@ -554,6 +564,77 @@ export const PremiumEventsService = {
       );
 
     return pending[0] || null;
+  },
+
+  async joinQuest(eventId: string) {
+    const normalizedEventId = String(eventId || '').trim();
+    if (!normalizedEventId) {
+      throw new Error('eventId is required');
+    }
+
+    const profile = await HackquestService.getCurrentUserProfile();
+    const playerId = String(profile?.username || '').trim().toLowerCase();
+    if (!playerId) {
+      throw new Error('Unable to resolve current player');
+    }
+
+    const eventExists = readOrganizerEvents().some((event) => event.id === normalizedEventId);
+    if (!eventExists) {
+      throw new Error('Quest not found');
+    }
+
+    const joins = readQuestJoins();
+    const existing = joins.find(
+      (join) => join.eventId === normalizedEventId && join.playerId === playerId
+    );
+
+    if (existing) {
+      return {
+        alreadyJoined: true,
+        join: existing,
+      };
+    }
+
+    const nextJoin: QuestJoinRecord = {
+      id: createId(),
+      eventId: normalizedEventId,
+      playerId,
+      joinedAt: nowIso(),
+    };
+
+    writeQuestJoins([...joins, nextJoin]);
+
+    return {
+      alreadyJoined: false,
+      join: nextJoin,
+    };
+  },
+
+  async getCurrentUserJoinedEventIds() {
+    const profile = await HackquestService.getCurrentUserProfile();
+    const playerId = String(profile?.username || '').trim().toLowerCase();
+    if (!playerId) {
+      return [] as string[];
+    }
+
+    const joins = readQuestJoins().filter((join) => join.playerId === playerId);
+    return Array.from(new Set(joins.map((join) => join.eventId)));
+  },
+
+  async getJoinedPlayersByEvent() {
+    const joinedByEvent: Record<string, string[]> = {};
+
+    readQuestJoins().forEach((join) => {
+      if (!joinedByEvent[join.eventId]) {
+        joinedByEvent[join.eventId] = [];
+      }
+
+      if (!joinedByEvent[join.eventId].includes(join.playerId)) {
+        joinedByEvent[join.eventId].push(join.playerId);
+      }
+    });
+
+    return joinedByEvent;
   },
 
   async consumePendingReward(rewardId: string) {
