@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
-import { LayoutDashboard, Zap, FileText, Award, Trophy, Users, Settings, CheckCircle, XCircle, ExternalLink, Search, CalendarPlus, Sparkles, Crown } from 'lucide-react';
+import { LayoutDashboard, FileText, Award, Trophy, Users, Settings, CheckCircle, XCircle, ExternalLink, Search, CalendarPlus, Sparkles, Crown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type AdminUserInfo, type LeaderboardView, type QuestView } from '@/lib/services/hackquest.service';
+import { HackquestService, type AdminUserInfo, type LeaderboardView } from '@/lib/services/hackquest.service';
 import {
   PremiumEventsService,
   type OrganizerEvent,
@@ -17,7 +17,6 @@ import {
 const adminNavItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
   { id: 'events', label: 'Quest', icon: CalendarPlus },
-  { id: 'quests', label: 'Quests', icon: Zap },
   { id: 'submissions', label: 'Submissions', icon: FileText },
   { id: 'nft-minting', label: 'NFT Minting', icon: Award },
   { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
@@ -81,7 +80,6 @@ const fileToDataUrl = (file: File) =>
 
 export function AdminPage() {
   const navigate = useNavigate();
-  const [questList, setQuestList] = useState<QuestView[]>([]);
   const [leaderboardList, setLeaderboardList] = useState<LeaderboardView[]>([]);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -113,8 +111,7 @@ export function AdminPage() {
     let active = true;
 
     (async () => {
-      const [remoteQuests, remoteLeaderboard, session, remoteEvents, marketplaceArtifacts] = await Promise.all([
-        HackquestService.getQuests(),
+      const [remoteLeaderboard, session, remoteEvents, marketplaceArtifacts] = await Promise.all([
         HackquestService.getLeaderboard(),
         HackquestService.getAuthMe(),
         PremiumEventsService.getOrganizerEvents(),
@@ -122,7 +119,6 @@ export function AdminPage() {
       ]);
 
       if (!active) return;
-      setQuestList(remoteQuests);
       setLeaderboardList(remoteLeaderboard);
       setIsAdmin(session.authUser?.role === 'admin');
       setOrganizerEvents(remoteEvents);
@@ -1038,31 +1034,6 @@ export function AdminPage() {
                   {eventMessage}
                 </div>
               )}
-            </div>
-          )}
-
-          {/* QUESTS */}
-          {activeSection === 'quests' && (
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-                <h2 style={{ fontFamily: fonts.orbitron, fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>Quest Management</h2>
-                <button style={{ height: '40px', backgroundColor: colors.neon500, color: colors.bgBase, borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '13px', fontWeight: 700, cursor: 'pointer', padding: '0 16px' }}>+ Create Quest</button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {questList.map((q) => (
-                  <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '12px', padding: '14px 16px' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '14px', fontWeight: 600, color: colors.textPrimary }}>{q.title}</div>
-                      <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: colors.textMuted, marginTop: '2px' }}>{q.category} · {q.difficulty} · ⚡ {q.xp} XP</div>
-                    </div>
-                    <span style={{ backgroundColor: q.status === 'In Progress' ? colors.neon100 : q.status === 'Completed' ? 'rgba(0,255,65,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid ${colors.borderSubtle}`, borderRadius: '8px', padding: '2px 8px', fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '2px', color: q.status === 'In Progress' ? colors.neon500 : q.status === 'Completed' ? colors.neon500 : colors.textMuted }}>{q.status.toUpperCase()}</span>
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                      <button style={{ height: '32px', backgroundColor: 'transparent', color: colors.neon500, borderRadius: '6px', border: `1px solid ${colors.neon300}`, fontSize: '12px', cursor: 'pointer', padding: '0 10px' }}>Edit</button>
-                      <button style={{ height: '32px', backgroundColor: 'transparent', color: colors.red500, borderRadius: '6px', border: 'rgba(255,68,68,0.3) 1px solid', fontSize: '12px', cursor: 'pointer', padding: '0 10px' }}>Delete</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
