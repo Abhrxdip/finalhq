@@ -16,7 +16,7 @@ import {
 
 const adminNavItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'events', label: 'Events', icon: CalendarPlus },
+  { id: 'events', label: 'Quest', icon: CalendarPlus },
   { id: 'quests', label: 'Quests', icon: Zap },
   { id: 'submissions', label: 'Submissions', icon: FileText },
   { id: 'nft-minting', label: 'NFT Minting', icon: Award },
@@ -544,7 +544,7 @@ export function AdminPage() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '10px' }}>
                 <h2 style={{ fontFamily: fonts.orbitron, fontSize: '20px', fontWeight: 700, color: '#fff', margin: 0 }}>
-                  Organizer Events
+                  Organizer Quest
                 </h2>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button
@@ -561,7 +561,7 @@ export function AdminPage() {
                       padding: '0 14px',
                     }}
                   >
-                    + New Event
+                    + New Quest
                   </button>
                   <button
                     onClick={handleSaveEvent}
@@ -580,7 +580,7 @@ export function AdminPage() {
                       opacity: isSavingEvent ? 0.7 : 1,
                     }}
                   >
-                    {editingEventId ? 'Save Event Update' : 'Create Event'}
+                    {editingEventId ? 'Save Quest Update' : 'Create Quest'}
                   </button>
                 </div>
               </div>
@@ -595,14 +595,14 @@ export function AdminPage() {
                 }}
               >
                 <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.neon500, marginBottom: '12px' }}>
-                  CREATE / UPDATE EVENT
+                  CREATE / UPDATE QUEST
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) minmax(220px, 260px)', gap: '14px' }}>
                   <div>
                     <div style={{ marginBottom: '12px' }}>
                       <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.textMuted, marginBottom: '6px' }}>
-                        EVENT POSTER (3:4)
+                        QUEST POSTER (3:4)
                       </div>
                       <label
                         htmlFor="event-poster-input"
@@ -641,7 +641,7 @@ export function AdminPage() {
                         {eventForm.posterUrl ? (
                           <img
                             src={eventForm.posterUrl}
-                            alt="Event poster"
+                            alt="Quest poster"
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
                         ) : (
@@ -654,7 +654,7 @@ export function AdminPage() {
                   <div>
                     <div style={{ marginBottom: '10px' }}>
                       <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.textMuted, marginBottom: '6px' }}>
-                        EVENT NAME
+                        QUEST NAME
                       </div>
                       <input
                         value={eventForm.eventName}
@@ -664,7 +664,7 @@ export function AdminPage() {
                             eventName: event.target.value,
                           }))
                         }
-                        placeholder="Enter event name"
+                        placeholder="Enter quest name"
                         style={{
                           width: '100%',
                           height: '38px',
@@ -771,7 +771,7 @@ export function AdminPage() {
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                   <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.gold500 }}>
-                    UPDATE EVENT • RANKINGS
+                    UPDATE QUEST • RANKINGS
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button
@@ -992,12 +992,12 @@ export function AdminPage() {
                 }}
               >
                 <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '2px', color: colors.textMuted, marginBottom: '10px' }}>
-                  EXISTING EVENTS
+                  EXISTING QUESTS
                 </div>
                 <div style={{ display: 'grid', gap: '8px' }}>
                   {organizerEvents.length === 0 && (
                     <div style={{ fontSize: '12px', color: colors.textMuted, padding: '10px', border: `1px dashed ${colors.borderSubtle}`, borderRadius: '10px' }}>
-                      No organizer events yet.
+                      No organizer quests yet.
                     </div>
                   )}
 

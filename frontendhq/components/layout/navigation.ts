@@ -2,7 +2,6 @@ import {
   Activity,
   Bell,
   Home,
-  Map,
   Settings,
   Shield,
   ShoppingBag,
@@ -25,8 +24,7 @@ export type AppNavItem = {
 
 export const appNavItems: AppNavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: Home, exact: true },
-  { path: '/quests', label: 'Quests', icon: Zap },
-  { path: '/event', label: 'Event', icon: Map },
+  { path: '/quests', label: 'Quest', icon: Zap },
   { path: '/team', label: 'Team', icon: Users },
   { path: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { path: '/profile/cipher_hawk', label: 'Profile', icon: User },

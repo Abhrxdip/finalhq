@@ -1,5 +1,5 @@
-import { QuestListingPage } from "@/components/pages/quests/QuestListingPage";
+import { EventPage } from "@/components/pages/EventPage";
 
 export default function QuestsRoute() {
-  return <QuestListingPage />;
+  return <EventPage />;
 }

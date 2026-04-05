@@ -120,13 +120,13 @@ export function DashboardPage() {
         <StatCard label="NFTs EARNED" value={String(nftCount)} sub="On-chain inventory" color={colors.purple500} icon={<span style={{ fontSize: '20px' }}>🎖️</span>} />
       </div>
 
-      {/* Countdown + Active event */}
+      {/* Countdown + Active quest */}
       <div style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', padding: '24px', marginBottom: '32px', background: 'linear-gradient(135deg, rgba(0,255,65,0.04) 0%, rgba(0,0,0,0) 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colors.neon500 }} />
-              <span style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500 }}>LIVE EVENT</span>
+              <span style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500 }}>LIVE QUEST</span>
             </div>
             <div style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff' }}>HackQuest Genesis · Season 01</div>
             <div style={{ fontSize: '13px', color: colors.textMuted, marginTop: '4px' }}>1,247 participants · 4 tracks active</div>
@@ -140,10 +140,10 @@ export function DashboardPage() {
             ))}
           </div>
           <button
-            onClick={() => navigate('/event')}
+            onClick={() => navigate('/quests')}
             style={{ height: '44px', backgroundColor: colors.neon500, color: colors.bgBase, borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', padding: '0 20px' }}
           >
-            View Event →
+            View Quest →
           </button>
         </div>
       </div>
