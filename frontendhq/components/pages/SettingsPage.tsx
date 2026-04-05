@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { User, Wallet, Lock, Bell, Palette, Shield, AlertTriangle } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService } from '@/lib/services/hackquest.service';
+import { HackteraService } from '@/lib/services/hacktera.service';
 
 const navItems = [
   { id: 'profile', label: 'Profile', icon: User },
@@ -41,8 +41,8 @@ export function SettingsPage() {
   const [activeSection, setActiveSection] = useState('profile');
   const [displayName, setDisplayName] = useState('Player');
   const [username, setUsername] = useState('player');
-  const [walletAddress, setWalletAddress] = useState(HackquestService.getCurrentWalletAddress() || '');
-  const [walletProvider, setWalletProvider] = useState(HackquestService.getCurrentWalletProvider() || 'Pera Wallet');
+  const [walletAddress, setWalletAddress] = useState(HackteraService.getCurrentWalletAddress() || '');
+  const [walletProvider, setWalletProvider] = useState(HackteraService.getCurrentWalletProvider() || 'Pera Wallet');
   const [privacyToggles, setPrivacyToggles] = useState({ profilePublic: true, showXP: true, leaderboard: true, activityFeed: true, nftShowcase: true });
   const [notifToggles, setNotifToggles] = useState({ xpAlerts: true, rankChanges: true, teamInvites: true, nftMints: true, adminMessages: true, emailDigest: false });
   const [network, setNetwork] = useState<'Mainnet' | 'Testnet'>('Mainnet');
@@ -52,7 +52,7 @@ export function SettingsPage() {
     let active = true;
 
     (async () => {
-      const profile = await HackquestService.getCurrentUserProfile();
+      const profile = await HackteraService.getCurrentUserProfile();
       if (!active || !profile) return;
 
       setDisplayName(profile.displayName);
@@ -61,7 +61,7 @@ export function SettingsPage() {
         setWalletAddress(profile.walletAddress);
       }
 
-      const provider = HackquestService.getCurrentWalletProvider();
+      const provider = HackteraService.getCurrentWalletProvider();
       if (provider) {
         setWalletProvider(provider);
       }

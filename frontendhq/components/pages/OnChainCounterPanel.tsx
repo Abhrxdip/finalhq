@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ExternalLink, Plus, RefreshCw, Rocket, ShieldCheck } from "lucide-react";
 import { colors, fonts } from "@/lib/design-tokens";
-import { HackquestService } from "@/lib/services/hackquest.service";
+import { HackteraService } from "@/lib/services/hacktera.service";
 
 type OnChainCounterPanelProps = {
   title: string;
@@ -43,8 +43,8 @@ export function OnChainCounterPanel({ title, subtitle }: OnChainCounterPanelProp
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
 
   const walletInfo = {
-    walletAddress: HackquestService.getCurrentWalletAddress() || "",
-    walletProvider: HackquestService.getCurrentWalletProvider() || "Not selected",
+    walletAddress: HackteraService.getCurrentWalletAddress() || "",
+    walletProvider: HackteraService.getCurrentWalletProvider() || "Not selected",
   };
 
   const handleDeploy = async () => {
@@ -56,7 +56,7 @@ export function OnChainCounterPanel({ title, subtitle }: OnChainCounterPanelProp
     setIsBusy(true);
     setStatusMessage("Deploying counter contract on TestNet...");
 
-    const payload = await HackquestService.deployCounterContract({
+    const payload = await HackteraService.deployCounterContract({
       senderAddress: walletInfo.walletAddress,
     });
 
@@ -107,7 +107,7 @@ export function OnChainCounterPanel({ title, subtitle }: OnChainCounterPanelProp
     setIsBusy(true);
     setStatusMessage("Sending increment transaction...");
 
-    const payload = await HackquestService.incrementCounterContract({
+    const payload = await HackteraService.incrementCounterContract({
       appId,
       senderAddress: walletInfo.walletAddress,
     });
@@ -150,7 +150,7 @@ export function OnChainCounterPanel({ title, subtitle }: OnChainCounterPanelProp
     setIsBusy(true);
     setStatusMessage("Refreshing on-chain counter value...");
 
-    const payload = await HackquestService.getCounterContractState(appId);
+    const payload = await HackteraService.getCounterContractState(appId);
     const result = extractResult(payload);
 
     if (!result) {
@@ -184,7 +184,7 @@ export function OnChainCounterPanel({ title, subtitle }: OnChainCounterPanelProp
     setIsBusy(true);
     setStatusMessage("Verifying latest transaction...");
 
-    const payload = await HackquestService.verifyTransaction(latestTxId);
+    const payload = await HackteraService.verifyTransaction(latestTxId);
     const result = extractResult(payload);
 
     if (!result) {

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Background } from "@/components/layout/Background";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { colors } from "@/lib/design-tokens";
-import { HackquestService } from "@/lib/services/hackquest.service";
+import { HackteraService } from "@/lib/services/hacktera.service";
 import { useNavigate } from "@/lib/router-compat";
 
 interface DashboardShellProps {
@@ -20,18 +20,18 @@ export function DashboardShell({ children }: DashboardShellProps) {
     let active = true;
 
     (async () => {
-      if (!HackquestService.isAuthenticated()) {
+      if (!HackteraService.isAuthenticated()) {
         navigate("/login");
         return;
       }
 
-      const session = await HackquestService.getAuthMe();
+      const session = await HackteraService.getAuthMe();
       if (!active) {
         return;
       }
 
       if (!session.authUser) {
-        HackquestService.clearAuthSession();
+        HackteraService.clearAuthSession();
         navigate("/login");
         return;
       }

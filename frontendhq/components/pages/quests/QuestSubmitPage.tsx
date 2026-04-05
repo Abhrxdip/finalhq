@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from '@/lib/router-compat';
 import { ChevronLeft, Github, Globe, Video, FileText, Image, Check, X } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type LeaderboardView, type QuestView } from '@/lib/services/hackquest.service';
+import { HackteraService, type LeaderboardView, type QuestView } from '@/lib/services/hacktera.service';
 
 const steps = ['Project Info', 'Links & Files', 'Demo', 'Review'];
 
@@ -47,8 +47,8 @@ export function QuestSubmitPage() {
 
     (async () => {
       const [remoteQuests, remoteLeaderboard] = await Promise.all([
-        HackquestService.getQuests(),
-        HackquestService.getLeaderboard(),
+        HackteraService.getQuests(),
+        HackteraService.getLeaderboard(),
       ]);
       if (!active) return;
       setQuestList(remoteQuests);
@@ -74,7 +74,7 @@ export function QuestSubmitPage() {
     setSubmitError(null);
 
     const questId = routeQuestId || quest.id;
-    const result = await HackquestService.completeQuestForCurrentWallet(questId);
+    const result = await HackteraService.completeQuestForCurrentWallet(questId);
 
     if (!result) {
       setSubmitError('Quest completion could not be synced. Connect a backend-linked wallet to record XP on-chain.');
@@ -83,7 +83,7 @@ export function QuestSubmitPage() {
     }
 
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('hackquest_last_submission', JSON.stringify(result));
+      window.localStorage.setItem('hacktera_last_submission', JSON.stringify(result));
     }
 
     setSubmitting(false);

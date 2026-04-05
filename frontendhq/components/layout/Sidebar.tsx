@@ -5,7 +5,7 @@ import { NavLink, useLocation } from '@/lib/router-compat';
 import { LogOut } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { getAppNavItems } from '@/components/layout/navigation';
-import { HackquestService } from '@/lib/services/hackquest.service';
+import { HackteraService } from '@/lib/services/hacktera.service';
 
 export function Sidebar() {
   const location = useLocation();
@@ -22,8 +22,8 @@ export function Sidebar() {
 
     (async () => {
       const [profile, session] = await Promise.all([
-        HackquestService.getCurrentUserProfile(),
-        HackquestService.getAuthMe(),
+        HackteraService.getCurrentUserProfile(),
+        HackteraService.getAuthMe(),
       ]);
       if (!active || !profile) return;
 
@@ -68,8 +68,8 @@ export function Sidebar() {
   );
 
   const handleLogout = React.useCallback(async () => {
-    await HackquestService.logout();
-    HackquestService.clearWalletSession();
+    await HackteraService.logout();
+    HackteraService.clearWalletSession();
     window.location.assign('/login');
   }, []);
 
@@ -112,7 +112,7 @@ export function Sidebar() {
           </div>
           <div>
             <div style={{ fontFamily: fonts.orbitron, fontSize: '14px', fontWeight: 700, color: colors.neon500, letterSpacing: '2px' }}>
-              HACKQUEST
+              HACKTERA
             </div>
             <div style={{ fontSize: '11px', color: colors.textMuted, fontFamily: fonts.mono, letterSpacing: '1px' }}>
               GENESIS · S01

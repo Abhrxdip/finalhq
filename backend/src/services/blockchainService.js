@@ -283,7 +283,7 @@ const mintAchievementNFT = async (user, quest, definition = null) => {
   const resolvedName =
     (definition && definition.name) ||
     (quest && quest.name) ||
-    `HackQuest-${String(quest && quest.id ? quest.id : 'Achievement').slice(0, 24)}`;
+    `Hacktera-${String(quest && quest.id ? quest.id : 'Achievement').slice(0, 24)}`;
 
   const resolvedIpfsHash = resolveNftIpfsHash(definition, quest);
 

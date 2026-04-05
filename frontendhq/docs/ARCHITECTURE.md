@@ -1,4 +1,4 @@
-# HackQuest Unified Architecture
+# Hacktera Unified Architecture
 
 ## Overview
 This project consolidates three separate frontend codebases (landing page, auth flow, and full dashboard app) into one Next.js App Router codebase with route groups.
@@ -17,9 +17,9 @@ This project consolidates three separate frontend codebases (landing page, auth 
 - `components/ui`: shared shadcn-style primitives (single canonical copy)
 
 ## Data and Services
-- `lib/services/hackquest.service.ts`: primary API layer for auth, quests, leaderboard, activity, wallet, and blockchain routes
+- `lib/services/hacktera.service.ts`: primary API layer for auth, quests, leaderboard, activity, wallet, and blockchain routes
 - `lib/supabase/*`: optional Supabase clients kept for integration parity
-- `lib/constants/hackquest-tables.ts`: configurable table-name mapping to the Hackquest database schema
+- `lib/constants/hacktera-tables.ts`: configurable table-name mapping to the Hacktera database schema
 
 ## Routing Compatibility
 - `lib/router-compat.tsx` emulates React Router hooks (`useNavigate`, `useParams`, `useLocation`, `NavLink`) so migrated components work with minimal rewrites while running on Next.js.

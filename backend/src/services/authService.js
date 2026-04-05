@@ -4,9 +4,9 @@ const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { AppError } = require('../utils/http');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'hackquest-dev-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET || 'hacktera-dev-secret-change-me';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-const JWT_ISSUER = process.env.JWT_ISSUER || 'hackquest-backend';
+const JWT_ISSUER = process.env.JWT_ISSUER || 'hacktera-backend';
 const SALT_ROUNDS = Number(process.env.PASSWORD_SALT_ROUNDS || 10);
 const ADMIN_EMAILS = new Set(
   String(process.env.ADMIN_EMAILS || '')

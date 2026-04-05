@@ -81,7 +81,7 @@ def deploy_xp_registry_app(
         clear_program=clear_program,
         global_schema=transaction.StateSchema(num_uints=1, num_byte_slices=1),
         local_schema=transaction.StateSchema(num_uints=0, num_byte_slices=0),
-        note=b"HACKQUEST_XP_REGISTRY_DEPLOY",
+        note=b"HACKTERA_XP_REGISTRY_DEPLOY",
     )
     signed = txn.sign(admin_private_key)
     tx_id = algod_client.send_transaction(signed)
@@ -106,7 +106,7 @@ def _xp_note_payload(
     app_id: int | None = None,
 ) -> dict[str, Any]:
     payload: dict[str, Any] = {
-        "type": "HACKQUEST_XP",
+        "type": "HACKTERA_XP",
         "user_address": user_address,
         "xp_amount": int(xp),
         "quest_id": str(quest_id),
@@ -165,7 +165,7 @@ def _decode_note(note_b64: str) -> dict[str, Any] | None:
     except Exception:
         return None
 
-    if payload.get("type") != "HACKQUEST_XP":
+    if payload.get("type") != "HACKTERA_XP":
         return None
     return payload
 

@@ -15,24 +15,24 @@ permissions:
   packages: read
 
 jobs:
-  HackQuest-contracts-validate:
-    name: Run HackQuest-contracts release
+  Hacktera-contracts-validate:
+    name: Run Hacktera-contracts release
     secrets: inherit
-    uses: ./.github/workflows/HackQuest-contracts-ci.yaml
+    uses: ./.github/workflows/Hacktera-contracts-ci.yaml
 
-  HackQuest-contracts-release:
-    name: Run HackQuest-contracts release
+  Hacktera-contracts-release:
+    name: Run Hacktera-contracts release
     secrets: inherit
-    uses: ./.github/workflows/HackQuest-contracts-cd.yaml
-    needs: HackQuest-contracts-validate
+    uses: ./.github/workflows/Hacktera-contracts-cd.yaml
+    needs: Hacktera-contracts-validate
 
-  HackQuest-frontend-validate:
-    name: Run HackQuest-frontend release
+  Hacktera-frontend-validate:
+    name: Run Hacktera-frontend release
     secrets: inherit
-    uses: ./.github/workflows/HackQuest-frontend-ci.yaml
+    uses: ./.github/workflows/Hacktera-frontend-ci.yaml
 
-  HackQuest-frontend-release:
-    name: Run HackQuest-frontend release
+  Hacktera-frontend-release:
+    name: Run Hacktera-frontend release
     secrets: inherit
-    uses: ./.github/workflows/HackQuest-frontend-cd.yaml
-    needs: HackQuest-frontend-validate
+    uses: ./.github/workflows/Hacktera-frontend-cd.yaml
+    needs: Hacktera-frontend-validate

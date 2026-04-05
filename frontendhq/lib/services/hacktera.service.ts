@@ -126,11 +126,11 @@ type WalletSession = {
   walletProvider: string | null;
 };
 
-const AUTH_SESSION_KEY = "hackquest.auth.session";
-const WALLET_SESSION_KEY = "hackquest.wallet.session";
-const PROFILE_KEY = "hackquest.profile";
+const AUTH_SESSION_KEY = "hacktera.auth.session";
+const WALLET_SESSION_KEY = "hacktera.wallet.session";
+const PROFILE_KEY = "hacktera.profile";
 const ADMIN_ACCESS_KEY = "HQ-ADMIN-2026";
-const DEMO_ADMIN_EMAIL = "admin.demo@hackquest.io";
+const DEMO_ADMIN_EMAIL = "admin.demo@hacktera.io";
 const DEMO_ADMIN_PASSWORD = "DemoAdmin@123";
 const DEMO_ADMIN_USERNAME = "demo_admin";
 const DEMO_ADMIN_DISPLAY_NAME = "Demo Admin";
@@ -182,7 +182,7 @@ const defaultProfile: UserProfile = {
   authUserId: "auth_001",
   username: "arena_rookie",
   displayName: "Arena Rookie",
-  email: "rookie@hackquest.dev",
+  email: "rookie@hacktera.dev",
   walletAddress: "ALGO7B3XQKF9VPNR2MJLCWTZ4DVXHM8YPWQSEJANKQ5K9XZ",
   className: "Architect",
   level: 12,
@@ -455,7 +455,7 @@ const sampleTransactions: WalletTransactionView[] = [
 const sampleEvents = [
   {
     id: "event-genesis-s01",
-    name: "HackQuest Genesis",
+    name: "Hacktera Genesis",
     status: "live",
     participantCount: 1247,
     startDate: "2026-04-01T00:00:00.000Z",
@@ -469,7 +469,7 @@ const sampleAdminDirectory: AdminUserInfo[] = [
   {
     username: "algo_phoenix",
     displayName: "Algo Phoenix",
-    email: "algo.phoenix@hackquest.io",
+    email: "algo.phoenix@hacktera.io",
     role: "user",
     walletAddress: "ALGO9P1HOENIX7B3XQKFM2JLCWTZ4DVXHM8YPWQSEJANKQ5K",
     level: 24,
@@ -483,7 +483,7 @@ const sampleAdminDirectory: AdminUserInfo[] = [
   {
     username: "block_shaman",
     displayName: "Block Shaman",
-    email: "block.shaman@hackquest.io",
+    email: "block.shaman@hacktera.io",
     role: "user",
     walletAddress: "ALGO2SHAMAN7B3XQKFM2JLCWTZ4DVXHM8YPWQSEJANKQ5K9X",
     level: 22,
@@ -497,7 +497,7 @@ const sampleAdminDirectory: AdminUserInfo[] = [
   {
     username: "terra_ghost",
     displayName: "Terra Ghost",
-    email: "terra.ghost@hackquest.io",
+    email: "terra.ghost@hacktera.io",
     role: "user",
     walletAddress: "ALGO3GHOST7B3XQKFM2JLCWTZ4DVXHM8YPWQSEJANKQ5K9X",
     level: 20,
@@ -511,7 +511,7 @@ const sampleAdminDirectory: AdminUserInfo[] = [
   {
     username: "ops_admin",
     displayName: "Ops Admin",
-    email: "ops.admin@hackquest.io",
+    email: "ops.admin@hacktera.io",
     role: "admin",
     walletAddress: "ALGO4ADMIN7B3XQKFM2JLCWTZ4DVXHM8YPWQSEJANKQ5K9X",
     level: 30,
@@ -762,7 +762,7 @@ function nowIso() {
   return new Date().toISOString();
 }
 
-export const HackquestService = {
+export const HackteraService = {
   getDemoAdminCredentials() {
     return {
       email: DEMO_ADMIN_EMAIL,
@@ -800,7 +800,7 @@ export const HackquestService = {
       : payload.email.split("@")[0] || baseProfile.username;
     const displayName = isDemoAdminLogin
       ? DEMO_ADMIN_DISPLAY_NAME
-      : baseProfile.displayName || "HackQuest Player";
+      : baseProfile.displayName || "Hacktera Player";
 
     const session = createAuthSession(payload.email, username, displayName, requestedRole);
     if (requestedRole === "admin" && session.authUser?.role !== "admin") {
@@ -1045,7 +1045,7 @@ export const HackquestService = {
     return {
       username: entry.username,
       displayName: entry.displayName,
-      email: `${entry.username}@hackquest.io`,
+      email: `${entry.username}@hacktera.io`,
       role: entry.username.includes("admin") ? "admin" : "user",
       walletAddress: `ALGO_${entry.username.toUpperCase()}_${entry.rank}`,
       level: entry.level,
@@ -1280,7 +1280,7 @@ export const HackquestService = {
       });
 
       const signed = await connector.signTransaction(
-        [[{ txn: createTxn, signers: [senderAddress], message: "Deploy HackQuest counter contract" }]],
+        [[{ txn: createTxn, signers: [senderAddress], message: "Deploy Hacktera counter contract" }]],
         senderAddress
       );
 
@@ -1345,7 +1345,7 @@ export const HackquestService = {
       });
 
       const signed = await connector.signTransaction(
-        [[{ txn: incrementTxn, signers: [senderAddress], message: "Increment HackQuest counter" }]],
+        [[{ txn: incrementTxn, signers: [senderAddress], message: "Increment Hacktera counter" }]],
         senderAddress
       );
 
@@ -1417,4 +1417,4 @@ export const HackquestService = {
   },
 } as const;
 
-export type HackquestApiPayload = GenericRecord;
+export type HackteraApiPayload = GenericRecord;

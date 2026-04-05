@@ -5,7 +5,7 @@ import { useNavigate } from '@/lib/router-compat';
 import { CalendarDays, Crown } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { PremiumEventsService, type OrganizerEvent } from '@/lib/services/premium-events.service';
-import { HackquestService } from '@/lib/services/hackquest.service';
+import { HackteraService } from '@/lib/services/hacktera.service';
 
 const formatDateTime = (value: string) => {
   const date = new Date(value);
@@ -33,7 +33,7 @@ export function QuestPage() {
 
     (async () => {
       const [session, createdQuests] = await Promise.all([
-        HackquestService.getAuthMe(),
+        HackteraService.getAuthMe(),
         PremiumEventsService.getOrganizerEvents(),
       ]);
 

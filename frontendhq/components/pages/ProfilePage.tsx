@@ -5,13 +5,13 @@ import { useNavigate, useParams } from '@/lib/router-compat';
 import { ExternalLink, Zap, Copy } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import {
-  HackquestService,
+  HackteraService,
   type ActivityView,
   type LeaderboardView,
   type MarketplaceItemView,
   type QuestView,
   type UserProfile,
-} from '@/lib/services/hackquest.service';
+} from '@/lib/services/hacktera.service';
 
 const profileTabs = ['Stats', 'Quests (42)', 'NFTs (12)', 'Team', 'Activity'];
 
@@ -54,11 +54,11 @@ export function ProfilePage() {
 
     (async () => {
       const [remoteLeaderboard, remoteNfts, remoteQuests, remoteActivity, remoteProfile] = await Promise.all([
-        HackquestService.getLeaderboard(),
-        HackquestService.getMarketplaceItems(),
-        HackquestService.getQuests(),
-        HackquestService.getActivityFeed(),
-        HackquestService.getCurrentUserProfile(),
+        HackteraService.getLeaderboard(),
+        HackteraService.getMarketplaceItems(),
+        HackteraService.getQuests(),
+        HackteraService.getActivityFeed(),
+        HackteraService.getCurrentUserProfile(),
       ]);
 
       if (!active) return;

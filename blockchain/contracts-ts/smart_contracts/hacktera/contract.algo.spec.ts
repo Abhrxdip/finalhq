@@ -1,11 +1,11 @@
 import { TestExecutionContext } from '@algorandfoundation/algorand-typescript-testing'
 import { describe, expect, it } from 'vitest'
-import { Hackquest } from './contract.algo'
+import { Hacktera } from './contract.algo'
 
-describe('Hackquest contract', () => {
+describe('Hacktera contract', () => {
   const ctx = new TestExecutionContext()
   it('Logs the returned value when sayHello is called', () => {
-    const contract = ctx.contract.create(Hackquest)
+    const contract = ctx.contract.create(Hacktera)
 
     const result = contract.hello('Sally')
 

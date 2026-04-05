@@ -3,7 +3,7 @@ const { asyncHandler } = require('../utils/http');
 const healthCheck = asyncHandler(async (req, res) => {
   res.status(200).json({
     status: 'ok',
-    service: 'HackQuest Backend',
+    service: 'Hacktera Backend',
     timestamp: new Date().toISOString(),
   });
 });

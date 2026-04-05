@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type LeaderboardView, type UserProfile } from '@/lib/services/hackquest.service';
+import { HackteraService, type LeaderboardView, type UserProfile } from '@/lib/services/hacktera.service';
 
 const timeFilters = ['Daily', 'Weekly', 'Overall'];
 const scopeFilters = ['Individual', 'Teams'];
@@ -21,8 +21,8 @@ export function LeaderboardPage() {
 
     (async () => {
       const [remoteLeaderboard, remoteProfile] = await Promise.all([
-        HackquestService.getLeaderboard(),
-        HackquestService.getCurrentUserProfile(),
+        HackteraService.getLeaderboard(),
+        HackteraService.getCurrentUserProfile(),
       ]);
       if (!active) return;
       setLeaderboardList(remoteLeaderboard);

@@ -12,7 +12,7 @@ const DOT_GRID = `radial-gradient(circle, rgba(0,255,65,0.18) 1px, transparent 1
 
 // ── Terminal Prompt ───────────────────────────────────────────────────────
 const TERMINAL_LINES = [
-  { text: '> init hackquest@1.4.2 --network mainnet-beta', color: '#4A6A4A' },
+  { text: '> init hacktera@1.4.2 --network mainnet-beta', color: '#4A6A4A' },
   { text: '> ✓  rpc: mainnet.helius.dev  ·  slot 312,847,201', color: '#4A6A4A' },
   { text: '> ✓  wallet: 5rEHjT2...Mm  ·  4.24 ◎ SOL', color: '#4A6A4A' },
   { text: '> ✓  event: SOLANA_SUMMER_HACK_2026  ·  247 active', color: '#00FF41' },
@@ -265,7 +265,7 @@ export function HeroSection() {
             userSelect: 'none', whiteSpace: 'nowrap',
           }}
         >
-          HACKQUEST
+          HACKTERA
         </div>
 
         {/* Live badge */}

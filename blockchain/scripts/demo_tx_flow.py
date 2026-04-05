@@ -68,7 +68,7 @@ def run_demo_flow(user_wallet: str | None, xp: int, quest_id: str) -> dict:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run HackQuest blockchain demo XP flow")
+    parser = argparse.ArgumentParser(description="Run Hacktera blockchain demo XP flow")
     parser.add_argument("--wallet", help="User wallet address; defaults to admin wallet from mnemonic")
     parser.add_argument("--xp", type=int, default=25, help="XP amount to record")
     parser.add_argument("--quest-id", default="demo-quest", help="Quest identifier")

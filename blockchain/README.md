@@ -1,6 +1,6 @@
-# HackQuest Algorand Layer (`blockchain`)
+# Hacktera Algorand Layer (`blockchain`)
 
-Python blockchain module for HackQuest backend integration.
+Python blockchain module for Hacktera backend integration.
 
 ## What This Implements
 
@@ -88,7 +88,7 @@ ASA settings:
 
 ```json
 {
-  "type": "HACKQUEST_XP",
+  "type": "HACKTERA_XP",
   "user_address": "...",
   "xp_amount": 100,
   "quest_id": "quest-1",

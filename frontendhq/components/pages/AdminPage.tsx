@@ -5,7 +5,7 @@ import { useNavigate } from '@/lib/router-compat';
 import { LayoutDashboard, Zap, FileText, Award, Trophy, Users, Settings, CheckCircle, XCircle, ExternalLink, Search } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type AdminUserInfo, type LeaderboardView, type QuestView } from '@/lib/services/hackquest.service';
+import { HackteraService, type AdminUserInfo, type LeaderboardView, type QuestView } from '@/lib/services/hacktera.service';
 import { OnChainCounterPanel } from '@/components/pages/OnChainCounterPanel';
 
 const adminNavItems = [
@@ -61,9 +61,9 @@ export function AdminPage() {
 
     (async () => {
       const [remoteQuests, remoteLeaderboard, session] = await Promise.all([
-        HackquestService.getQuests(),
-        HackquestService.getLeaderboard(),
-        HackquestService.getAuthMe(),
+        HackteraService.getQuests(),
+        HackteraService.getLeaderboard(),
+        HackteraService.getAuthMe(),
       ]);
 
       if (!active) return;
@@ -111,7 +111,7 @@ export function AdminPage() {
 
   const handleDeployRegistry = async () => {
     setChainActionMessage('Deploying XP registry...');
-    const payload = await HackquestService.deployXpRegistry();
+    const payload = await HackteraService.deployXpRegistry();
 
     if (!payload || typeof payload !== 'object') {
       setChainActionMessage('XP registry deployment failed.');
@@ -131,14 +131,14 @@ export function AdminPage() {
   };
 
   const handleRecordDemoXp = async () => {
-    const wallet = HackquestService.getCurrentWalletAddress();
+    const wallet = HackteraService.getCurrentWalletAddress();
     if (!wallet) {
       setChainActionMessage('Connect a wallet before recording XP on-chain.');
       return;
     }
 
     setChainActionMessage('Recording demo XP transaction...');
-    const payload = await HackquestService.recordXp({
+    const payload = await HackteraService.recordXp({
       userWallet: wallet,
       xp: 25,
       questId: 'admin-demo-sync',
@@ -167,7 +167,7 @@ export function AdminPage() {
       return;
     }
 
-    const details = await HackquestService.getUserInfoForAdmin(lookup);
+    const details = await HackteraService.getUserInfoForAdmin(lookup);
     if (!details) {
       setLookupMessage('User lookup failed. Ensure admin privileges and a valid username.');
       setSelectedUserInfo(null);
@@ -522,7 +522,7 @@ export function AdminPage() {
                       </div>
                       <span style={{ fontSize: '13px', fontWeight: 600, color: colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.displayName}</span>
                     </div>
-                    <span style={{ fontFamily: fonts.mono, fontSize: '11px', color: colors.textMuted }}>{p.username}@hackquest.io</span>
+                    <span style={{ fontFamily: fonts.mono, fontSize: '11px', color: colors.textMuted }}>{p.username}@hacktera.io</span>
                     <span style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: colors.neon500 }}>LVL {p.level}</span>
                     <span style={{ fontFamily: fonts.orbitron, fontSize: '12px', fontWeight: 700, color: colors.neon500 }}>⚡ {(p.xp / 1000).toFixed(1)}k</span>
                     <span style={{ backgroundColor: colors.neon100, border: `1px solid ${colors.neon300}`, borderRadius: '6px', padding: '2px 6px', fontFamily: fonts.mono, fontSize: '9px', color: colors.neon500 }}>ACTIVE</span>

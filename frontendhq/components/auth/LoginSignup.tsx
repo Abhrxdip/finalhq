@@ -14,7 +14,7 @@ import {
   Shield,
 } from "lucide-react";
 import { InputField } from "./InputField";
-import { HackquestService } from "@/lib/services/hackquest.service";
+import { HackteraService } from "@/lib/services/hacktera.service";
 
 const NEON = "#00FF41";
 const MUTED = "rgba(120,160,120,0.7)";
@@ -140,7 +140,7 @@ interface LoginSignupProps {
 
 export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
   const navigate = useNavigate();
-  const demoAdmin = HackquestService.getDemoAdminCredentials();
+  const demoAdmin = HackteraService.getDemoAdminCredentials();
   const [activeTab, setActiveTab] = useState<"login" | "signup">(initialTab);
 
   // Shared form state
@@ -236,7 +236,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
     }
 
     setIsSubmitting(true);
-    const session = await HackquestService.login({
+    const session = await HackteraService.login({
       email,
       password,
       requestedRole: accessMode,
@@ -279,7 +279,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
     }
 
     setIsSubmitting(true);
-    const session = await HackquestService.register({
+    const session = await HackteraService.register({
       displayName,
       username,
       email,
@@ -327,7 +327,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
           zIndex: 0,
         }}
       >
-        HACKQUEST
+        HACKTERA
       </div>
 
       {/* Card */}
@@ -378,7 +378,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
               letterSpacing: "2px",
             }}
           >
-            HACKQUEST
+            HACKTERA
           </div>
           <div
             style={{
@@ -672,7 +672,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
                   color: MUTED,
                 }}
               >
-                New to HackQuest?{" "}
+                New to Hacktera?{" "}
                 <span
                   style={{ color: NEON, cursor: "pointer" }}
                   onClick={() => setActiveTab("signup")}

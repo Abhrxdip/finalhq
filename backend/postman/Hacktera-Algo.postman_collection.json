@@ -1,8 +1,8 @@
 {
   "info": {
-    "name": "HackQuest Algo API",
+    "name": "Hacktera Algo API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Postman collection for HackQuest backend blockchain endpoints"
+    "description": "Postman collection for Hacktera backend blockchain endpoints"
   },
   "item": [
     {

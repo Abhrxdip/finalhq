@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate, useParams } from '@/lib/router-compat';
 import { ArrowLeft, Bookmark, Share2, Zap, Clock, Users, ChevronLeft } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type QuestView } from '@/lib/services/hackquest.service';
+import { HackteraService, type QuestView } from '@/lib/services/hacktera.service';
 
 const difficultyConfig: Record<string, { bg: string; border: string; color: string }> = {
   EASY: { bg: colors.neon100, border: colors.neon300, color: colors.neon500 },
@@ -46,7 +46,7 @@ export function QuestDetailPage() {
     let active = true;
 
     (async () => {
-      const remoteQuests = await HackquestService.getQuests();
+      const remoteQuests = await HackteraService.getQuests();
       if (!active) return;
       setQuestList(remoteQuests);
     })();

@@ -6,4 +6,4 @@ type = 'workspace'
 projects_root_path = 'projects'
 
 [project.run]
-build = ['HackQuest-contracts', 'HackQuest-frontend']
+build = ['Hacktera-contracts', 'Hacktera-frontend']

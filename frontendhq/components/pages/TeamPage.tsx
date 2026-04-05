@@ -5,12 +5,12 @@ import { useNavigate } from '@/lib/router-compat';
 import { Copy, Zap, Trophy, Users } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import {
-  HackquestService,
+  HackteraService,
   type ActivityView,
   type LeaderboardView,
   type QuestView,
   type UserProfile,
-} from '@/lib/services/hackquest.service';
+} from '@/lib/services/hacktera.service';
 
 const teamStats = [
   { label: 'TOTAL XP', value: '35,580', color: colors.neon500, icon: '⚡' },
@@ -41,10 +41,10 @@ export function TeamPage() {
 
     (async () => {
       const [remoteQuests, remoteActivity, remoteLeaderboard, profile] = await Promise.all([
-        HackquestService.getQuests(),
-        HackquestService.getActivityFeed(),
-        HackquestService.getLeaderboard(),
-        HackquestService.getCurrentUserProfile(),
+        HackteraService.getQuests(),
+        HackteraService.getActivityFeed(),
+        HackteraService.getLeaderboard(),
+        HackteraService.getCurrentUserProfile(),
       ]);
 
       if (!active) return;

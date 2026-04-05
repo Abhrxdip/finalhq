@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from '@/lib/router-compat';
 import { ChevronLeft, Copy, ExternalLink } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type QuestView } from '@/lib/services/hackquest.service';
+import { HackteraService, type QuestView } from '@/lib/services/hacktera.service';
 
 type StatusType = 'pending' | 'approved' | 'rejected';
 
@@ -34,8 +34,8 @@ export function QuestStatusPage() {
 
     (async () => {
       const [remoteQuests, remoteProgress] = await Promise.all([
-        HackquestService.getQuests(),
-        HackquestService.getQuestProgressForCurrentWallet(),
+        HackteraService.getQuests(),
+        HackteraService.getQuestProgressForCurrentWallet(),
       ]);
 
       if (!active) return;

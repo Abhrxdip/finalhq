@@ -1,1 +1,1 @@
-"""HackQuest smart contract logic modules."""
+"""Hacktera smart contract logic modules."""

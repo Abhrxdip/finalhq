@@ -1,4 +1,4 @@
-name: Release HackQuest-frontend
+name: Release Hacktera-frontend
 
 on:
   workflow_call:
@@ -26,7 +26,7 @@ jobs:
         run: pipx install algokit
 
       - name: Bootstrap dependencies
-        run: algokit project bootstrap all --project-name 'HackQuest-frontend'
+        run: algokit project bootstrap all --project-name 'Hacktera-frontend'
     
       - name: Publish to Vercel
         env:

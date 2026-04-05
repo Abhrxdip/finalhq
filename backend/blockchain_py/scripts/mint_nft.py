@@ -71,7 +71,7 @@ def mint_nft_from_payload(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Mint and transfer HackQuest NFT achievement")
+    parser = argparse.ArgumentParser(description="Mint and transfer Hacktera NFT achievement")
     parser.add_argument(
         "--json",
         required=True,

@@ -1,4 +1,4 @@
-# HackQuest Deployment Layout
+# Hacktera Deployment Layout
 
 This README defines a deployment-focused structure with only two top-level services:
 

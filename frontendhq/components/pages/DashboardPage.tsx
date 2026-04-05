@@ -4,7 +4,7 @@ import React from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { Zap, Trophy, Users, Clock, TrendingUp, ChevronRight } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type ActivityView, type LeaderboardView, type QuestView, type UserProfile } from '@/lib/services/hackquest.service';
+import { HackteraService, type ActivityView, type LeaderboardView, type QuestView, type UserProfile } from '@/lib/services/hacktera.service';
 import { PremiumEventsService, type PendingReward } from '@/lib/services/premium-events.service';
 
 function StatCard({ label, value, sub, color, icon }: { label: string; value: string; sub?: string; color: string; icon: React.ReactNode }) {
@@ -37,10 +37,10 @@ export function DashboardPage() {
 
     (async () => {
       const [remoteQuests, remoteLeaderboard, remoteActivity, remoteProfile] = await Promise.all([
-        HackquestService.getQuests(),
-        HackquestService.getLeaderboard(),
-        HackquestService.getActivityFeed(),
-        HackquestService.getCurrentUserProfile(),
+        HackteraService.getQuests(),
+        HackteraService.getLeaderboard(),
+        HackteraService.getActivityFeed(),
+        HackteraService.getCurrentUserProfile(),
       ]);
 
       if (!active) return;
@@ -128,7 +128,7 @@ export function DashboardPage() {
               <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: colors.neon500 }} />
               <span style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500 }}>LIVE QUEST</span>
             </div>
-            <div style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff' }}>HackQuest Genesis · Season 01</div>
+            <div style={{ fontFamily: fonts.orbitron, fontSize: '24px', fontWeight: 700, color: '#fff' }}>Hacktera Genesis · Season 01</div>
             <div style={{ fontSize: '13px', color: colors.textMuted, marginTop: '4px' }}>1,247 participants · 4 tracks active</div>
           </div>
           <div style={{ display: 'flex', gap: '12px' }}>

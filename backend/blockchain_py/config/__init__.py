@@ -1,1 +1,1 @@
-"""HackQuest configuration modules."""
+"""Hacktera configuration modules."""

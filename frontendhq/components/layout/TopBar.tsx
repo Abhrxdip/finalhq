@@ -5,7 +5,7 @@ import { Bell, Search, Zap } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { NavLink, useLocation, useNavigate } from '@/lib/router-compat';
 import { getAppNavItems } from '@/components/layout/navigation';
-import { HackquestService } from '@/lib/services/hackquest.service';
+import { HackteraService } from '@/lib/services/hacktera.service';
 
 export function TopBar() {
   const [search, setSearch] = useState('');
@@ -23,8 +23,8 @@ export function TopBar() {
 
     (async () => {
       const [profile, session] = await Promise.all([
-        HackquestService.getCurrentUserProfile(),
-        HackquestService.getAuthMe(),
+        HackteraService.getCurrentUserProfile(),
+        HackteraService.getAuthMe(),
       ]);
       if (!active || !profile) return;
 
@@ -57,8 +57,8 @@ export function TopBar() {
   );
 
   const handleLogout = React.useCallback(async () => {
-    await HackquestService.logout();
-    HackquestService.clearWalletSession();
+    await HackteraService.logout();
+    HackteraService.clearWalletSession();
     window.location.assign('/login');
   }, []);
 

@@ -1,6 +1,6 @@
-# HackQuest Backend
+# Hacktera Backend
 
-Hackathon-ready backend for HackQuest (The Hackathon Meta Game), built with:
+Hackathon-ready backend for Hacktera (The Hackathon Meta Game), built with:
 
 - Node.js + Express
 - PostgreSQL (existing schema)
@@ -24,8 +24,8 @@ src/
 public/
   dummy/
 postman/
-  HackQuest-Algo.postman_collection.json
-  HackQuest-Algo.postman_environment.json
+  Hacktera-Algo.postman_collection.json
+  Hacktera-Algo.postman_environment.json
 ```
 
 This folder is a standalone backend repository and can be deployed independently.
@@ -75,7 +75,7 @@ npm run dev
 - `INDEXER_SERVER`, `INDEXER_TOKEN` - Indexer config
 - `ALGO_XP_APP_ID` - optional deployed XP app id for XP records
 - `ALGO_STRICT` - if `true`, blockchain actions fail without mnemonic
-- `PYTHON_BIN` - python executable path, e.g. `c:/Users/abhra/Documents/HackQuest/.venv/Scripts/python.exe`
+- `PYTHON_BIN` - python executable path, e.g. `c:/Users/abhra/Documents/Hacktera/.venv/Scripts/python.exe`
 - `ALGO_SCRIPTS_DIR` - optional absolute path override for blockchain scripts
 - `PYTHON_TIMEOUT_MS` - timeout for python script execution
 
@@ -199,8 +199,8 @@ python -m pip install -r blockchain_py/requirements.txt
 ALGO_STRICT=true
 ALGORAND_NETWORK=testnet
 ALGO_ADMIN_MNEMONIC=<your 25-word mnemonic>
-PYTHON_BIN=c:/Users/abhra/Documents/HackQuest/.venv/Scripts/python.exe
-ADMIN_EMAILS=admin@hackquest.io
+PYTHON_BIN=c:/Users/abhra/Documents/Hacktera/.venv/Scripts/python.exe
+ADMIN_EMAILS=admin@hacktera.io
 ```
 
 3. Start backend:
@@ -259,8 +259,8 @@ Optional:
 This folder now includes a production Dockerfile that installs Node + Python deps.
 
 ```bash
-docker build -t hackquest-backend .
-docker run --rm -p 4000:4000 --env-file .env hackquest-backend
+docker build -t hacktera-backend .
+docker run --rm -p 4000:4000 --env-file .env hacktera-backend
 ```
 
 For cloud platforms (Render/Railway/Fly.io), deploy from the `backend` folder using this Dockerfile and set all required env vars.
@@ -299,8 +299,8 @@ Use returned fields in UI:
 
 Import these files from `postman/`:
 
-- `HackQuest-Algo.postman_collection.json`
-- `HackQuest-Algo.postman_environment.json`
+- `Hacktera-Algo.postman_collection.json`
+- `Hacktera-Algo.postman_environment.json`
 
 Recommended test order:
 

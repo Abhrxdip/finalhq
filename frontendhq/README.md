@@ -1,6 +1,6 @@
-# HackQuest Unified
+# Hacktera Unified
 
-Single, production-style Next.js App Router codebase for the HackQuest platform.
+Single, production-style Next.js App Router codebase for the Hacktera platform.
 
 This app consolidates:
 - landing page UI

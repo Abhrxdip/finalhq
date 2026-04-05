@@ -1,4 +1,4 @@
-import { HackquestService } from '@/lib/services/hackquest.service';
+import { HackteraService } from '@/lib/services/hacktera.service';
 
 export type PremiumNftCategory = 'Singularity' | 'Void' | 'Cipher' | 'Titan' | 'Ether';
 
@@ -69,9 +69,9 @@ type GeneratePrimeArtifactInput = {
   algoAssetId?: string | null;
 };
 
-const ORGANIZER_EVENTS_KEY = 'hackquest.organizer.events.v1';
-const PRIME_ARTIFACTS_KEY = 'hackquest.prime.artifacts.v1';
-const PENDING_REWARDS_KEY = 'hackquest.pending.rewards.v1';
+const ORGANIZER_EVENTS_KEY = 'hacktera.organizer.events.v1';
+const PRIME_ARTIFACTS_KEY = 'hacktera.prime.artifacts.v1';
+const PENDING_REWARDS_KEY = 'hacktera.pending.rewards.v1';
 
 const XP_BY_RANK = [100, 90, 80, 70, 60, 50, 40, 30, 20, 10];
 
@@ -537,7 +537,7 @@ export const PremiumEventsService = {
   },
 
   async getPendingRewardForCurrentUser() {
-    const profile = await HackquestService.getCurrentUserProfile();
+    const profile = await HackteraService.getCurrentUserProfile();
     const username = String(profile?.username || '').trim().toLowerCase();
     if (!username) {
       return null;
@@ -569,7 +569,7 @@ export const PremiumEventsService = {
     }
 
     if (rewards[index].xpAwarded > 0) {
-      await HackquestService.addBonusXp(rewards[index].xpAwarded, 'event_ranking');
+      await HackteraService.addBonusXp(rewards[index].xpAwarded, 'event_ranking');
     }
 
     const nextReward: PendingReward = {
@@ -598,7 +598,7 @@ export const PremiumEventsService = {
     });
 
     await this.claimPrimeArtifact(generated.id, reward.playerId);
-    await HackquestService.incrementNftCount(1);
+    await HackteraService.incrementNftCount(1);
 
     return generated;
   },

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService } from '@/lib/services/hackquest.service';
+import { HackteraService } from '@/lib/services/hacktera.service';
 import { PremiumEventsService, type PrimeArtifactItem } from '@/lib/services/premium-events.service';
 
 export function InventoryPage() {
@@ -14,7 +14,7 @@ export function InventoryPage() {
     let active = true;
 
     (async () => {
-      const profile = await HackquestService.getCurrentUserProfile();
+      const profile = await HackteraService.getCurrentUserProfile();
       const playerId = String(profile.username || '').trim().toLowerCase();
 
       if (!playerId) {

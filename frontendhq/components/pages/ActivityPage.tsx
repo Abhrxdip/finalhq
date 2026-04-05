@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type ActivityView, type LeaderboardView, type UserProfile } from '@/lib/services/hackquest.service';
+import { HackteraService, type ActivityView, type LeaderboardView, type UserProfile } from '@/lib/services/hacktera.service';
 
 const filterPills = ['All', '⚡ XP Earned', '🏆 NFTs Minted', '⬆️ Rank Changes', '⚡ Quests Done', '👥 Team Activity'];
 const timeFilters = ['Last hour', 'Today', 'This week'];
@@ -22,9 +22,9 @@ export function ActivityPage() {
 
     (async () => {
       const [remoteActivity, remoteLeaderboard, remoteProfile] = await Promise.all([
-        HackquestService.getActivityFeed(),
-        HackquestService.getLeaderboard(),
-        HackquestService.getCurrentUserProfile(),
+        HackteraService.getActivityFeed(),
+        HackteraService.getLeaderboard(),
+        HackteraService.getCurrentUserProfile(),
       ]);
 
       if (!active) return;

@@ -1,14 +1,14 @@
 import { AlgorandClient } from '@algorandfoundation/algokit-utils'
-import { HackquestFactory } from '../artifacts/hackquest/HackquestClient'
+import { HackteraFactory } from '../artifacts/hacktera/HackteraClient'
 
 // Below is a showcase of various deployment options you can use in TypeScript Client
 export async function deploy() {
-  console.log('=== Deploying Hackquest ===')
+  console.log('=== Deploying Hacktera ===')
 
   const algorand = AlgorandClient.fromEnvironment()
   const deployer = await algorand.account.fromEnvironment('DEPLOYER')
 
-  const factory = algorand.client.getTypedAppFactory(HackquestFactory, {
+  const factory = algorand.client.getTypedAppFactory(HackteraFactory, {
     defaultSender: deployer.addr,
   })
 

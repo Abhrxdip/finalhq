@@ -1,4 +1,4 @@
-type HackquestFactoryConfig = {
+type HackteraFactoryConfig = {
   defaultSender?: string
   algorand: unknown
 }
@@ -24,10 +24,10 @@ type AppClient = {
   }
 }
 
-export class HackquestFactory {
+export class HackteraFactory {
   private readonly sender?: string
 
-  constructor(config: HackquestFactoryConfig) {
+  constructor(config: HackteraFactoryConfig) {
     this.sender = config.defaultSender
   }
 

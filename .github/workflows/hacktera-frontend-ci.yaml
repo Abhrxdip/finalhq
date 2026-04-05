@@ -1,4 +1,4 @@
-name: Validate HackQuest-frontend
+name: Validate Hacktera-frontend
 
 on:
   
@@ -32,16 +32,16 @@ jobs:
         run: pipx install algokit
 
       - name: Install dependencies
-        run: algokit project bootstrap all --project-name 'HackQuest-frontend'
+        run: algokit project bootstrap all --project-name 'Hacktera-frontend'
 
       
       - name: Run linters
-        run: algokit project run lint --project-name 'HackQuest-frontend'
+        run: algokit project run lint --project-name 'Hacktera-frontend'
       
       
       - name: Run unit tests
-        run: algokit project run test --project-name 'HackQuest-frontend'
+        run: algokit project run test --project-name 'Hacktera-frontend'
       
 
       - name: Build
-        run: algokit project run build --project-name 'HackQuest-frontend'
+        run: algokit project run build --project-name 'Hacktera-frontend'

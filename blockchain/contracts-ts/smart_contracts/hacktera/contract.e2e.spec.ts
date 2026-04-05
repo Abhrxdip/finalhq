@@ -3,9 +3,9 @@ import { registerDebugEventHandlers } from '@algorandfoundation/algokit-utils-de
 import { algorandFixture } from '@algorandfoundation/algokit-utils/testing'
 import { Address } from 'algosdk'
 import { beforeAll, beforeEach, describe, expect, test } from 'vitest'
-import { HackquestFactory } from '../artifacts/hackquest/HackquestClient'
+import { HackteraFactory } from '../artifacts/hacktera/HackteraClient'
 
-describe('Hackquest contract', () => {
+describe('Hacktera contract', () => {
   const localnet = algorandFixture()
   beforeAll(() => {
     Config.configure({
@@ -17,7 +17,7 @@ describe('Hackquest contract', () => {
   beforeEach(localnet.newScope)
 
   const deploy = async (account: Address) => {
-    const factory = localnet.algorand.client.getTypedAppFactory(HackquestFactory, {
+    const factory = localnet.algorand.client.getTypedAppFactory(HackteraFactory, {
       defaultSender: account,
     })
 

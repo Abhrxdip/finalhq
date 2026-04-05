@@ -67,7 +67,7 @@ def get_user_xp_summary(wallet: str) -> dict[str, Any]:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Record and fetch HackQuest XP proof")
+    parser = argparse.ArgumentParser(description="Record and fetch Hacktera XP proof")
     parser.add_argument("--json", help='JSON payload for record mode, e.g. {"user_wallet":"...","xp":100,"quest_id":"q1"}')
     parser.add_argument("--wallet", help="Wallet address for get mode")
     parser.add_argument("--mode", choices=["record", "get"], default="record")

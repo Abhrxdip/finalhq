@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { Zap, Clock, Users, Lock, CheckCircle, ChevronRight } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type QuestView, type UserProfile } from '@/lib/services/hackquest.service';
+import { HackteraService, type QuestView, type UserProfile } from '@/lib/services/hacktera.service';
 
 const categories = ['All', 'Building', 'Deploy', 'Documentation', 'Social', 'Bonus'];
 
@@ -30,8 +30,8 @@ export function QuestListingPage() {
 
     (async () => {
       const [remoteQuests, remoteProfile] = await Promise.all([
-        HackquestService.getQuests(),
-        HackquestService.getCurrentUserProfile(),
+        HackteraService.getQuests(),
+        HackteraService.getCurrentUserProfile(),
       ]);
       if (!active) return;
       setQuestList(remoteQuests);

@@ -1,7 +1,7 @@
 {
-  "name": "backend-hackquest",
+  "name": "backend-hacktera",
   "version": "1.0.0",
-  "description": "HackQuest hackathon-ready backend",
+  "description": "Hacktera hackathon-ready backend",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",

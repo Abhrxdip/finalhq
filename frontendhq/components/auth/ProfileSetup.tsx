@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { InputField } from "./InputField";
 import { useAuth } from "./AuthContext";
-import { HackquestService } from "@/lib/services/hackquest.service";
+import { HackteraService } from "@/lib/services/hacktera.service";
 
 const NEON = "#00FF41";
 const MUTED = "rgba(120,160,120,0.7)";
@@ -256,7 +256,7 @@ export function ProfileSetup() {
     setUsernameChecking(true);
     setUsernameAvailable(null);
     const timer = setTimeout(() => {
-      const taken = ["admin", "hackquest", "test", "user", "hacker"];
+      const taken = ["admin", "hacktera", "test", "user", "hacker"];
       setUsernameAvailable(!taken.includes(username.toLowerCase()));
       setUsernameChecking(false);
     }, 600);
@@ -286,10 +286,10 @@ export function ProfileSetup() {
     setIsSubmitting(true);
 
     if (walletAddress) {
-      HackquestService.persistWalletSession(walletAddress, walletProvider);
+      HackteraService.persistWalletSession(walletAddress, walletProvider);
 
-      if (HackquestService.isAuthenticated()) {
-        const linked = await HackquestService.linkWallet(walletAddress);
+      if (HackteraService.isAuthenticated()) {
+        const linked = await HackteraService.linkWallet(walletAddress);
         if (!linked) {
           setSubmitError("Wallet sync failed. You can continue and reconnect from Settings.");
           setIsSubmitting(false);
@@ -333,7 +333,7 @@ export function ProfileSetup() {
           zIndex: 0,
         }}
       >
-        HACKQUEST
+        HACKTERA
       </div>
 
       {/* Two-column layout */}

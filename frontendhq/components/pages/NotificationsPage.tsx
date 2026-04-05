@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Zap, Trophy, Users, Shield } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type NotificationView } from '@/lib/services/hackquest.service';
+import { HackteraService, type NotificationView } from '@/lib/services/hacktera.service';
 
 const filterTabs = ['All', 'XP', 'NFTs', 'Leaderboard', 'Team', 'System'];
 
@@ -23,7 +23,7 @@ export function NotificationsPage() {
     let active = true;
 
     (async () => {
-      const remoteNotifications = await HackquestService.getNotifications();
+      const remoteNotifications = await HackteraService.getNotifications();
       if (!active) return;
       setNotifState(remoteNotifications);
     })();

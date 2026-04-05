@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { Users, Zap } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService } from '@/lib/services/hackquest.service';
+import { HackteraService } from '@/lib/services/hacktera.service';
 
 const tracks = [
   { id: 't1', name: 'DeFi Builder', icon: '💰', desc: 'Build decentralized finance protocols on Algorand', color: colors.neon500, multiplier: '2×' },
@@ -51,7 +51,7 @@ export function EventPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('Overview');
   const [timeLeft, setTimeLeft] = useState({ h: 36, m: 14, s: 22 });
-  const [eventTitle, setEventTitle] = useState('HackQuest Genesis');
+  const [eventTitle, setEventTitle] = useState('Hacktera Genesis');
   const [eventStatus, setEventStatus] = useState('LIVE');
   const [participants, setParticipants] = useState(1247);
   const [startDate, setStartDate] = useState('Apr 1, 2026');
@@ -79,8 +79,8 @@ export function EventPage() {
 
     (async () => {
       const [healthPayload, events] = await Promise.all([
-        HackquestService.getHealth(),
-        HackquestService.getEvents(),
+        HackteraService.getHealth(),
+        HackteraService.getEvents(),
       ]);
 
       if (!active) return;
@@ -97,12 +97,12 @@ export function EventPage() {
         return;
       }
 
-      const detailed = live.id ? await HackquestService.getEventById(live.id) : null;
+      const detailed = live.id ? await HackteraService.getEventById(live.id) : null;
       const resolvedEvent = detailed || live;
 
       if (!active) return;
 
-      setEventTitle(resolvedEvent.name || 'HackQuest Genesis');
+      setEventTitle(resolvedEvent.name || 'Hacktera Genesis');
       setEventStatus((resolvedEvent.status || 'live').toUpperCase());
       setParticipants(resolvedEvent.participantCount || 1247);
       setStartDate(formatEventDate(resolvedEvent.startDate, 'Apr 1, 2026'));
@@ -216,7 +216,7 @@ export function EventPage() {
           {activeTab === 'Overview' && (
             <div>
               <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500, marginBottom: '10px' }}>ABOUT THIS QUEST</div>
-              <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '20px' }}>HackQuest Genesis Season 01 is the flagship Algorand hackathon bringing together the brightest blockchain developers worldwide. Compete across 4 specialized tracks, earn XP, mint exclusive NFTs, and claim your place on the global leaderboard.</p>
+              <p style={{ fontSize: '15px', color: colors.textSecondary, lineHeight: 1.7, marginBottom: '20px' }}>Hacktera Genesis Season 01 is the flagship Algorand hackathon bringing together the brightest blockchain developers worldwide. Compete across 4 specialized tracks, earn XP, mint exclusive NFTs, and claim your place on the global leaderboard.</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 {[['🌍', 'Global Quest', '1,247 participants from 68 countries'], ['⚡', 'XP Racing', 'Compete for XP across all 4 tracks'], ['🎖️', 'NFT Rewards', 'Exclusive on-chain badges for top performers'], ['◆', 'Algorand Native', 'All rewards minted on Algorand mainnet']].map(([icon, title, desc]) => (
                   <div key={title as string} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: `1px solid ${colors.borderSubtle}`, borderRadius: '12px', padding: '16px' }}>

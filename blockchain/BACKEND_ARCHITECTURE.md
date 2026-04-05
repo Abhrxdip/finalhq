@@ -1,4 +1,4 @@
-# HackQuest Backend Architecture for Algorand Integration
+# Hacktera Backend Architecture for Algorand Integration
 
 This document defines how your Node.js backend should integrate with `blockchain` for TestNet MVP.
 

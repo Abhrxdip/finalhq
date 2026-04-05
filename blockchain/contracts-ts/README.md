@@ -1,4 +1,4 @@
-# HackQuest-contracts
+# Hacktera-contracts
 
 This project has been generated using AlgoKit. See below for default getting started instructions.
 
@@ -65,7 +65,7 @@ This template provides a set of [algokit generators](https://github.com/algorand
 
 ### Generate Smart Contract 
 
-By default the template creates a single `HelloWorld` contract under hackquest folder in the `smart_contracts` directory. To add a new contract:
+By default the template creates a single `HelloWorld` contract under hacktera folder in the `smart_contracts` directory. To add a new contract:
 
 1. From the root of the project (`../`) execute `algokit generate smart-contract`. This will create a new starter smart contract and deployment configuration file under `{your_contract_name}` subfolder in the `smart_contracts` directory.
 2. Each contract potentially has different creation parameters and deployment steps. Hence, you need to define your deployment logic in `deploy-config.ts` file.
@@ -99,7 +99,7 @@ To define custom `algokit project run` commands refer to [documentation](https:/
 #### Setting up GitHub for CI/CD workflow and TestNet deployment
 
   1. Every time you have a change to your smart contract, and when you first initialize the project you need to [build the contract](#initial-setup) and then commit the `smart_contracts/artifacts` folder so the [output stability](https://github.com/algorandfoundation/algokit-cli/blob/main/docs/articles/output_stability.md) tests pass
-  2. Decide what values you want to use for the `allowUpdate` and `allowDelete` parameters specified in [`deploy-config.ts`](./smart_contracts/hackquest/deploy-config.ts).
+  2. Decide what values you want to use for the `allowUpdate` and `allowDelete` parameters specified in [`deploy-config.ts`](./smart_contracts/hacktera/deploy-config.ts).
      When deploying to LocalNet these values are both set to `true` for convenience. But for non-LocalNet networks
      they are more conservative and use `false`
      These default values will allow the smart contract to be deployed initially, but will not allow the app to be updated or deleted if is changed and the build will instead fail.

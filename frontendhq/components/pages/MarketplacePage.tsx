@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useNavigate } from '@/lib/router-compat';
 import { Zap, ExternalLink } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type MarketplaceItemView } from '@/lib/services/hackquest.service';
+import { HackteraService, type MarketplaceItemView } from '@/lib/services/hacktera.service';
 import { PremiumEventsService, type PrimeArtifactItem } from '@/lib/services/premium-events.service';
 
 const categoryTabs = ['All', 'Quest Rewards', 'Event Exclusive', 'Team Rewards', 'Limited Edition'];
@@ -65,7 +65,7 @@ export function MarketplacePage() {
   const [confirmStep, setConfirmStep] = useState<ConfirmStep>('idle');
   const [marketItems, setMarketItems] = useState<MarketplaceItem[]>([]);
   const [availableXp, setAvailableXp] = useState(0);
-  const [walletAddress, setWalletAddress] = useState(HackquestService.getCurrentWalletAddress() || '');
+  const [walletAddress, setWalletAddress] = useState(HackteraService.getCurrentWalletAddress() || '');
   const [profilePath, setProfilePath] = useState('/profile/player');
   const [mintTxId, setMintTxId] = useState<string | null>(null);
   const [mintError, setMintError] = useState<string | null>(null);
@@ -79,8 +79,8 @@ export function MarketplacePage() {
 
     (async () => {
       const [remoteItems, profile] = await Promise.all([
-        HackquestService.getMarketplaceItems(),
-        HackquestService.getCurrentUserProfile(),
+        HackteraService.getMarketplaceItems(),
+        HackteraService.getCurrentUserProfile(),
       ]);
 
       const premiumItems = await PremiumEventsService.getPrimeArtifactsMarketplace();
@@ -99,12 +99,12 @@ export function MarketplacePage() {
         setCurrentPlayerId(String(profile.username || '').trim().toLowerCase());
       }
 
-      const resolvedWallet = profile?.walletAddress || HackquestService.getCurrentWalletAddress();
+      const resolvedWallet = profile?.walletAddress || HackteraService.getCurrentWalletAddress();
       if (!resolvedWallet) {
         return;
       }
 
-      const xpPayload = await HackquestService.getUserXp(resolvedWallet);
+      const xpPayload = await HackteraService.getUserXp(resolvedWallet);
       if (!active) return;
 
       const onChainXp = extractTotalXp(xpPayload);
@@ -132,14 +132,14 @@ export function MarketplacePage() {
 
     setConfirmStep('processing');
 
-    const resolvedWallet = walletAddress || HackquestService.getCurrentWalletAddress();
+    const resolvedWallet = walletAddress || HackteraService.getCurrentWalletAddress();
     if (!resolvedWallet) {
       setConfirmStep('confirm');
       setMintError('Connect a wallet before minting NFTs.');
       return;
     }
 
-    const mintPayload = await HackquestService.mintNft({
+    const mintPayload = await HackteraService.mintNft({
       userWallet: resolvedWallet,
       nftName: confirmModal.name,
     });

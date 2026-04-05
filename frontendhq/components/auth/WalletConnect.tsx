@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Shield, ChevronRight, Clipboard } from "lucide-react";
 import { InputField } from "./InputField";
 import { useAuth } from "./AuthContext";
-import { HackquestService } from "@/lib/services/hackquest.service";
+import { HackteraService } from "@/lib/services/hacktera.service";
 
 const NEON = "#00FF41";
 const MUTED = "rgba(120,160,120,0.7)";
@@ -207,7 +207,7 @@ export function WalletConnect() {
     setIsConnecting(true);
 
     if (provider === "pera") {
-      const connection = await HackquestService.connectWalletProvider("pera");
+      const connection = await HackteraService.connectWalletProvider("pera");
       if (connection?.walletAddress) {
         addr = connection.walletAddress;
       }
@@ -222,10 +222,10 @@ export function WalletConnect() {
     setWalletAddress(addr);
     setWalletProvider(providerLabel);
 
-    HackquestService.persistWalletSession(addr, providerLabel);
+    HackteraService.persistWalletSession(addr, providerLabel);
 
-    if (HackquestService.isAuthenticated()) {
-      const linked = await HackquestService.linkWallet(addr);
+    if (HackteraService.isAuthenticated()) {
+      const linked = await HackteraService.linkWallet(addr);
       if (!linked) {
         setConnectError("Wallet link failed. Check backend connectivity and retry.");
         setIsConnecting(false);
@@ -268,7 +268,7 @@ export function WalletConnect() {
           zIndex: 0,
         }}
       >
-        HACKQUEST
+        HACKTERA
       </div>
 
       {/* Card */}
@@ -694,7 +694,7 @@ export function WalletConnect() {
               lineHeight: 1.5,
             }}
           >
-            HackQuest never accesses your funds. Connection is read-only for XP
+            Hacktera never accesses your funds. Connection is read-only for XP
             and NFT minting.
           </span>
         </div>

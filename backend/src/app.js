@@ -25,7 +25,7 @@ app.use('/dummy', express.static(path.join(__dirname, '../public/dummy')));
 
 app.get('/', (req, res) => {
   res.status(200).json({
-    service: 'HackQuest Backend',
+    service: 'Hacktera Backend',
     status: 'running',
     docs: '/api/health',
     dummyFrontend: '/dummy',

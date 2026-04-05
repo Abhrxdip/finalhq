@@ -17,7 +17,7 @@ def record_xp(
     params = algod_client.suggested_params()
     
     note_payload = {
-        "type": "HACKQUEST_XP",
+        "type": "HACKTERA_XP",
         "user_address": user_address,
         "xp_amount": xp_amount,
         "quest_id": quest_id,
@@ -51,6 +51,6 @@ def get_user_xp_history(indexer_client: indexer.IndexerClient, user_address: str
     # Note: In production, you'd filter by admin address and note prefix
     results = indexer_client.search_transactions(
         address=user_address,
-        note_prefix=b'{"type":"HACKQUEST_XP"'
+        note_prefix=b'{"type":"HACKTERA_XP"'
     ).do()
     return results.get("transactions", [])

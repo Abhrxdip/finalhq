@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Copy, ExternalLink, Send, Download, RefreshCw, LogOut } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { HackquestService, type MarketplaceItemView, type WalletTransactionView } from '@/lib/services/hackquest.service';
+import { HackteraService, type MarketplaceItemView, type WalletTransactionView } from '@/lib/services/hacktera.service';
 import { OnChainCounterPanel } from '@/components/pages/OnChainCounterPanel';
 
 const txFilters = ['All', 'XP Rewards', 'NFT Mints', 'Transfers'];
@@ -74,8 +74,8 @@ export function WalletPage() {
   const [addressCopied, setAddressCopied] = useState(false);
   const [transactionList, setTransactionList] = useState<WalletTransactionView[]>([]);
   const [walletNfts, setWalletNfts] = useState<MarketplaceItemView[]>([]);
-  const [walletAddress, setWalletAddress] = useState(HackquestService.getCurrentWalletAddress() || '');
-  const [walletProvider, setWalletProvider] = useState(HackquestService.getCurrentWalletProvider() || 'Pera Wallet');
+  const [walletAddress, setWalletAddress] = useState(HackteraService.getCurrentWalletAddress() || '');
+  const [walletProvider, setWalletProvider] = useState(HackteraService.getCurrentWalletProvider() || 'Pera Wallet');
   const [onChainXp, setOnChainXp] = useState(0);
   const [algoBalance, setAlgoBalance] = useState(124.37);
   const [network, setNetwork] = useState('Mainnet');
@@ -86,9 +86,9 @@ export function WalletPage() {
   const loadWalletState = React.useCallback(async () => {
     setIsRefreshing(true);
 
-    const profile = await HackquestService.getCurrentUserProfile();
-    const resolvedWallet = profile?.walletAddress || HackquestService.getCurrentWalletAddress() || '';
-    const resolvedProvider = HackquestService.getCurrentWalletProvider() || 'Pera Wallet';
+    const profile = await HackteraService.getCurrentUserProfile();
+    const resolvedWallet = profile?.walletAddress || HackteraService.getCurrentWalletAddress() || '';
+    const resolvedProvider = HackteraService.getCurrentWalletProvider() || 'Pera Wallet';
 
     if (resolvedWallet) {
       setWalletAddress(resolvedWallet);
@@ -96,8 +96,8 @@ export function WalletPage() {
     setWalletProvider(resolvedProvider);
 
     const [remoteTransactions, remoteMarketplaceItems] = await Promise.all([
-      HackquestService.getWalletTransactions(resolvedWallet || undefined),
-      HackquestService.getMarketplaceItems(),
+      HackteraService.getWalletTransactions(resolvedWallet || undefined),
+      HackteraService.getMarketplaceItems(),
     ]);
 
     setTransactionList(remoteTransactions);
@@ -105,7 +105,7 @@ export function WalletPage() {
 
     if (profile) {
       setOnChainXp(profile.totalXp);
-      const ownedNfts = profile.backendUserId ? await HackquestService.getUserNfts(profile.backendUserId) : [];
+      const ownedNfts = profile.backendUserId ? await HackteraService.getUserNfts(profile.backendUserId) : [];
       if (ownedNfts.length > 0) {
         setWalletNfts(ownedNfts);
       }
@@ -113,8 +113,8 @@ export function WalletPage() {
 
     if (resolvedWallet) {
       const [xpPayload, assetsPayload] = await Promise.all([
-        HackquestService.getUserXp(resolvedWallet),
-        HackquestService.getUserAssets(resolvedWallet),
+        HackteraService.getUserXp(resolvedWallet),
+        HackteraService.getUserAssets(resolvedWallet),
       ]);
 
       const xpValue = extractXpValue(xpPayload);
@@ -169,7 +169,7 @@ export function WalletPage() {
       return;
     }
 
-    const verificationPayload = await HackquestService.verifyTransaction(latestTx);
+    const verificationPayload = await HackteraService.verifyTransaction(latestTx);
     const result = extractResult(verificationPayload);
 
     if (!result) {
@@ -247,7 +247,7 @@ export function WalletPage() {
             <button onClick={handleVerifyLatest} style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '36px', padding: '0 14px', backgroundColor: 'transparent', color: colors.blue500, borderRadius: '8px', border: `1px solid ${colors.blue500}55`, fontFamily: fonts.outfit, fontSize: '12px', cursor: 'pointer' }}>
               <ExternalLink size={12} /> Verify Latest TX
             </button>
-            <button onClick={async () => { await HackquestService.disconnectWalletProvider(); setWalletAddress(''); setWalletProvider('Wallet disconnected'); }} style={{ background: 'none', border: 'none', color: colors.red500, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button onClick={async () => { await HackteraService.disconnectWalletProvider(); setWalletAddress(''); setWalletProvider('Wallet disconnected'); }} style={{ background: 'none', border: 'none', color: colors.red500, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <LogOut size={12} /> Disconnect
             </button>
           </div>
