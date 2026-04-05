@@ -1,8 +1,9 @@
 "use client";
 
 import React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { NavLink, useLocation } from '@/lib/router-compat';
-import { LogOut } from 'lucide-react';
+import { Award, CalendarPlus, FileText, LayoutDashboard, LogOut, Settings, Trophy, Users } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { appNavItems } from '@/components/layout/navigation';
 import { HackquestService } from '@/lib/services/hackquest.service';
@@ -21,8 +22,19 @@ const PLAYER_NAV_PATHS = [
   '/settings',
 ];
 
+const adminSectionNavItems = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'events', label: 'Quest', icon: CalendarPlus },
+  { id: 'submissions', label: 'Submissions', icon: FileText },
+  { id: 'nft-minting', label: 'NFT Minting', icon: Award },
+  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
+  { id: 'participants', label: 'Participants', icon: Users },
+  { id: 'settings', label: 'Settings', icon: Settings },
+];
+
 export function Sidebar() {
   const location = useLocation();
+  const searchParams = useSearchParams();
   const [isAdmin, setIsAdmin] = React.useState(false);
   const [displayName, setDisplayName] = React.useState('Player');
   const [level, setLevel] = React.useState(1);
@@ -77,6 +89,9 @@ export function Sidebar() {
     },
     [isAdmin]
   );
+
+  const showAdminSectionMenu = isAdmin && location.pathname === '/admin';
+  const activeAdminSection = searchParams.get('section') || 'overview';
 
   const handleLogout = React.useCallback(async () => {
     await HackquestService.logout();
@@ -177,62 +192,120 @@ export function Sidebar() {
 
       {/* Nav items */}
       <nav style={{ flex: 1, padding: '12px 12px', overflowY: 'auto' }}>
-        {visibleNavItems.map((item) => {
-          const active = isActive(item.path, item.exact);
-          const Icon = item.icon;
-          const accentColor = item.accent || colors.neon500;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              style={{ textDecoration: 'none', display: 'block', marginBottom: '2px' }}
+        {showAdminSectionMenu ? (
+          <>
+            <div
+              style={{
+                fontFamily: fonts.mono,
+                fontSize: '10px',
+                letterSpacing: '2px',
+                color: colors.orange500,
+                padding: '8px 12px',
+                marginBottom: '4px',
+              }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  padding: '10px 12px',
-                  borderRadius: '12px',
-                  backgroundColor: active ? colors.neon100 : 'transparent',
-                  borderLeft: active ? `3px solid ${accentColor}` : '3px solid transparent',
-                  transition: 'all 0.15s',
-                  position: 'relative',
-                }}
-              >
-                <Icon
-                  size={16}
-                  style={{ color: active ? accentColor : colors.textMuted, flexShrink: 0 }}
-                />
-                <span
-                  style={{
-                    fontSize: '14px',
-                    fontWeight: active ? 600 : 400,
-                    color: active ? accentColor : colors.textSecondary,
-                    flex: 1,
-                  }}
+              ADMIN PANEL
+            </div>
+            {adminSectionNavItems.map((item) => {
+              const active = activeAdminSection === item.id;
+              const Icon = item.icon;
+
+              return (
+                <NavLink
+                  key={item.id}
+                  to={`/admin?section=${item.id}`}
+                  style={{ textDecoration: 'none', display: 'block', marginBottom: '2px' }}
                 >
-                  {item.label}
-                </span>
-                {item.badge && (
-                  <span
+                  <div
                     style={{
-                      backgroundColor: colors.neon500,
-                      color: colors.bgBase,
-                      borderRadius: '10px',
-                      padding: '1px 7px',
-                      fontSize: '10px',
-                      fontWeight: 700,
-                      fontFamily: fonts.mono,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 12px',
+                      borderRadius: '12px',
+                      backgroundColor: active ? colors.neon100 : 'transparent',
+                      borderLeft: active ? `3px solid ${colors.neon500}` : '3px solid transparent',
+                      transition: 'all 0.15s',
+                      position: 'relative',
                     }}
                   >
-                    {item.badge}
+                    <Icon
+                      size={16}
+                      style={{ color: active ? colors.neon500 : colors.textMuted, flexShrink: 0 }}
+                    />
+                    <span
+                      style={{
+                        fontSize: '14px',
+                        fontWeight: active ? 600 : 400,
+                        color: active ? colors.neon500 : colors.textSecondary,
+                        flex: 1,
+                      }}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+                </NavLink>
+              );
+            })}
+          </>
+        ) : (
+          visibleNavItems.map((item) => {
+            const active = isActive(item.path, item.exact);
+            const Icon = item.icon;
+            const accentColor = item.accent || colors.neon500;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                style={{ textDecoration: 'none', display: 'block', marginBottom: '2px' }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    padding: '10px 12px',
+                    borderRadius: '12px',
+                    backgroundColor: active ? colors.neon100 : 'transparent',
+                    borderLeft: active ? `3px solid ${accentColor}` : '3px solid transparent',
+                    transition: 'all 0.15s',
+                    position: 'relative',
+                  }}
+                >
+                  <Icon
+                    size={16}
+                    style={{ color: active ? accentColor : colors.textMuted, flexShrink: 0 }}
+                  />
+                  <span
+                    style={{
+                      fontSize: '14px',
+                      fontWeight: active ? 600 : 400,
+                      color: active ? accentColor : colors.textSecondary,
+                      flex: 1,
+                    }}
+                  >
+                    {item.label}
                   </span>
-                )}
-              </div>
-            </NavLink>
-          );
-        })}
+                  {item.badge && (
+                    <span
+                      style={{
+                        backgroundColor: colors.neon500,
+                        color: colors.bgBase,
+                        borderRadius: '10px',
+                        padding: '1px 7px',
+                        fontSize: '10px',
+                        fontWeight: 700,
+                        fontFamily: fonts.mono,
+                      }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+              </NavLink>
+            );
+          })
+        )}
       </nav>
 
       {/* Bottom */}

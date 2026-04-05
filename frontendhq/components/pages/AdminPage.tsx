@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useNavigate } from '@/lib/router-compat';
-import { LayoutDashboard, FileText, Award, Trophy, Users, Settings, CheckCircle, XCircle, ExternalLink, Search, CalendarPlus, Sparkles, Crown } from 'lucide-react';
+import { CheckCircle, XCircle, ExternalLink, Search, Sparkles, Crown } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { colors, fonts } from '@/lib/design-tokens';
 import { HackquestService, type AdminUserInfo, type LeaderboardView } from '@/lib/services/hackquest.service';
@@ -14,15 +15,25 @@ import {
   type PrimeArtifactItem,
 } from '@/lib/services/premium-events.service';
 
-const adminNavItems = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'events', label: 'Quest', icon: CalendarPlus },
-  { id: 'submissions', label: 'Submissions', icon: FileText },
-  { id: 'nft-minting', label: 'NFT Minting', icon: Award },
-  { id: 'leaderboard', label: 'Leaderboard', icon: Trophy },
-  { id: 'participants', label: 'Participants', icon: Users },
-  { id: 'settings', label: 'Settings', icon: Settings },
-];
+const adminSectionIds = [
+  'overview',
+  'events',
+  'submissions',
+  'nft-minting',
+  'leaderboard',
+  'participants',
+  'settings',
+] as const;
+
+type AdminSectionId = (typeof adminSectionIds)[number];
+
+const resolveAdminSection = (section: string | null): AdminSectionId => {
+  if (section && adminSectionIds.includes(section as AdminSectionId)) {
+    return section as AdminSectionId;
+  }
+
+  return 'overview';
+};
 
 const xpActivityData = [
   { time: '00:00', xp: 1200 }, { time: '04:00', xp: 840 }, { time: '08:00', xp: 2100 },
@@ -79,11 +90,14 @@ const fileToDataUrl = (file: File) =>
   });
 
 export function AdminPage() {
+  const searchParams = useSearchParams();
   const navigate = useNavigate();
   const [leaderboardList, setLeaderboardList] = useState<LeaderboardView[]>([]);
   const [authChecked, setAuthChecked] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [activeSection, setActiveSection] = useState('overview');
+  const [activeSection, setActiveSection] = useState<AdminSectionId>(
+    () => resolveAdminSection(searchParams.get('section'))
+  );
   const [selected, setSelected] = useState<string[]>([]);
   const [approvedIds, setApprovedIds] = useState<string[]>([]);
   const [rejectedIds, setRejectedIds] = useState<string[]>([]);
@@ -106,6 +120,10 @@ export function AdminPage() {
     eventDateTime: '',
     premiumNftCategory: 'Singularity' as PremiumNftCategory,
   });
+
+  useEffect(() => {
+    setActiveSection(resolveAdminSection(searchParams.get('section')));
+  }, [searchParams]);
 
   useEffect(() => {
     let active = true;
@@ -142,6 +160,11 @@ export function AdminPage() {
       active = false;
     };
   }, []);
+
+  const openSection = (section: AdminSectionId) => {
+    setActiveSection(section);
+    navigate(`/admin?section=${section}`, { replace: true });
+  };
 
   if (authChecked && !isAdmin) {
     return (
@@ -452,21 +475,7 @@ export function AdminPage() {
         <h1 style={{ fontFamily: fonts.orbitron, fontSize: '28px', fontWeight: 700, color: '#fff', margin: 0 }}>Admin Panel</h1>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '24px', alignItems: 'start' }}>
-        {/* Admin nav sidebar */}
-        <div style={{ backgroundColor: colors.bgSurface, border: `1px solid ${colors.borderDefault}`, borderRadius: '16px', padding: '12px', position: 'sticky', top: '24px' }}>
-          {adminNavItems.map((item) => {
-            const Icon = item.icon;
-            const active = activeSection === item.id;
-            return (
-              <button key={item.id} onClick={() => setActiveSection(item.id)} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', borderRadius: '10px', border: 'none', backgroundColor: active ? colors.neon100 : 'transparent', borderLeft: `3px solid ${active ? colors.neon500 : 'transparent'}`, color: active ? colors.neon500 : colors.textSecondary, fontFamily: fonts.outfit, fontSize: '14px', fontWeight: active ? 600 : 400, cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', marginBottom: '2px' }}>
-                <Icon size={15} style={{ flexShrink: 0 }} />
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-
+      <div>
         {/* Main content */}
         <div>
           {/* OVERVIEW */}
@@ -499,7 +508,7 @@ export function AdminPage() {
 
               {/* Quick actions */}
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button onClick={() => setActiveSection('submissions')} style={{ height: '44px', backgroundColor: colors.orange500, color: '#fff', borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', padding: '0 20px' }}>Approve All Pending ▸</button>
+                <button onClick={() => openSection('submissions')} style={{ height: '44px', backgroundColor: colors.orange500, color: '#fff', borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', padding: '0 20px' }}>Approve All Pending ▸</button>
                 <button onClick={handleDeployRegistry} style={{ height: '44px', backgroundColor: colors.blue500, color: '#fff', borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', padding: '0 20px' }}>Deploy XP Registry</button>
                 <button onClick={handleRecordDemoXp} style={{ height: '44px', backgroundColor: colors.purple500, color: '#fff', borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', padding: '0 20px' }}>Record +25 XP</button>
                 <button style={{ height: '44px', backgroundColor: 'transparent', color: colors.textPrimary, borderRadius: '10px', border: `1px solid ${colors.borderDefault}`, fontFamily: fonts.outfit, fontSize: '14px', cursor: 'pointer', padding: '0 20px' }}>Broadcast Message</button>
