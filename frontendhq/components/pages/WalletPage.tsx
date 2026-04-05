@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Copy, ExternalLink, Send, Download, RefreshCw, LogOut } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { HackquestService, type MarketplaceItemView, type WalletTransactionView } from '@/lib/services/hackquest.service';
+import { PremiumEventsService, type PrimeArtifactItem } from '@/lib/services/premium-events.service';
 
 const txFilters = ['All', 'XP Rewards', 'NFT Mints', 'Transfers'];
 
@@ -73,6 +74,7 @@ export function WalletPage() {
   const [addressCopied, setAddressCopied] = useState(false);
   const [transactionList, setTransactionList] = useState<WalletTransactionView[]>([]);
   const [walletNfts, setWalletNfts] = useState<MarketplaceItemView[]>([]);
+  const [claimedPremiumNfts, setClaimedPremiumNfts] = useState<PrimeArtifactItem[]>([]);
   const [walletAddress, setWalletAddress] = useState(HackquestService.getCurrentWalletAddress() || '');
   const [walletProvider, setWalletProvider] = useState(HackquestService.getCurrentWalletProvider() || 'Pera Wallet');
   const [onChainXp, setOnChainXp] = useState(0);
@@ -81,6 +83,14 @@ export function WalletPage() {
   const [assetCount, setAssetCount] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState<string | null>(null);
+
+  const walletOwnedNfts = walletNfts.filter((nft) => nft.owned);
+  const totalOwnedNftCount = React.useMemo(() => {
+    const ids = new Set<string>();
+    walletOwnedNfts.forEach((nft) => ids.add(`legacy-${nft.id}`));
+    claimedPremiumNfts.forEach((nft) => ids.add(`premium-${nft.id}`));
+    return ids.size;
+  }, [walletOwnedNfts, claimedPremiumNfts]);
 
   const loadWalletState = React.useCallback(async () => {
     setIsRefreshing(true);
@@ -104,10 +114,20 @@ export function WalletPage() {
 
     if (profile) {
       setOnChainXp(profile.totalXp);
-      const ownedNfts = profile.backendUserId ? await HackquestService.getUserNfts(profile.backendUserId) : [];
+
+      const ownerId = String(profile.username || '').trim().toLowerCase();
+      const [ownedNfts, premiumInventory] = await Promise.all([
+        profile.backendUserId ? HackquestService.getUserNfts(profile.backendUserId) : Promise.resolve([]),
+        ownerId ? PremiumEventsService.getInventoryForOwner(ownerId) : Promise.resolve([]),
+      ]);
+
       if (ownedNfts.length > 0) {
         setWalletNfts(ownedNfts);
       }
+
+      setClaimedPremiumNfts(premiumInventory);
+    } else {
+      setClaimedPremiumNfts([]);
     }
 
     if (resolvedWallet) {
@@ -262,7 +282,7 @@ export function WalletPage() {
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
         {[
-          { label: 'TOTAL NFTs', value: String(walletNfts.filter(n => n.owned).length), color: colors.purple500, sub: `${assetCount} on-chain assets` },
+          { label: 'TOTAL NFTs', value: String(totalOwnedNftCount), color: colors.purple500, sub: `${assetCount} on-chain assets` },
           { label: 'XP ON-CHAIN', value: onChainXp.toLocaleString(), color: colors.neon500, sub: 'Verified' },
           { label: 'TRANSACTIONS', value: String(transactionList.length), color: colors.textPrimary, sub: 'All time' },
           { label: 'NETWORK', value: network, color: colors.blue500, sub: '◆ Algorand' },
@@ -319,7 +339,7 @@ export function WalletPage() {
       <div style={{ marginBottom: '8px' }}>
         <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '3px', color: colors.neon500, marginBottom: '16px' }}>ON-CHAIN NFT COLLECTION</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '16px' }}>
-          {walletNfts.filter(n => n.owned).map((nft) => (
+          {walletOwnedNfts.map((nft) => (
             <div key={nft.id} style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '14px', padding: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '10px', backgroundColor: colors.purple100, border: '1px solid rgba(123,47,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px' }}>{nft.icon}</div>
@@ -335,6 +355,35 @@ export function WalletPage() {
               </button>
             </div>
           ))}
+
+          {claimedPremiumNfts.map((nft) => (
+            <div key={`premium-${nft.id}`} style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '14px', overflow: 'hidden' }}>
+              <div style={{ width: '100%', aspectRatio: '3 / 4', borderBottom: `1px solid ${colors.borderSubtle}` }}>
+                <img src={nft.imageUrl} alt={nft.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+              <div style={{ padding: '12px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '6px' }}>{nft.name}</div>
+                <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: colors.purple500, letterSpacing: '1px', marginBottom: '6px' }}>
+                  {nft.category.toUpperCase()} • CLAIMED
+                </div>
+                <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: colors.textDisabled, marginBottom: '4px' }}>
+                  Asset: {nft.algoAssetId || 'Pending'}
+                </div>
+                <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: colors.textMuted, marginBottom: '8px' }}>
+                  Claimed: {new Date(nft.claimedAt || nft.createdAt).toLocaleDateString('en-US')}
+                </div>
+                <button style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: colors.blue500, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  <ExternalLink size={10} /> View on AlgoExplorer
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {walletOwnedNfts.length === 0 && claimedPremiumNfts.length === 0 && (
+            <div style={{ gridColumn: '1 / -1', backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '14px', padding: '18px', fontSize: '13px', color: colors.textMuted }}>
+              No claimed NFTs available in this wallet yet.
+            </div>
+          )}
         </div>
       </div>
     </div>
