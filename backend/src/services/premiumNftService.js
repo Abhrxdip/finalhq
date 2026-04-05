@@ -101,8 +101,9 @@ const callStabilityCore = async ({ prompt }) => {
 
   if (!response.ok) {
     const responseText = await response.text();
+    const statusCode = response.status === 402 ? 402 : 502;
     throw new AppError(
-      502,
+      statusCode,
       `Stability AI image generation failed with status ${response.status}`,
       responseText.slice(0, 600)
     );
