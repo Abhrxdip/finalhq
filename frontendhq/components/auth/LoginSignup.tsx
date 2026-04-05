@@ -293,7 +293,7 @@ export function LoginSignup({ initialTab = "login" }: LoginSignupProps) {
       return;
     }
 
-    navigate("/auth/wallet");
+    navigate("/dashboard");
   };
 
   return (

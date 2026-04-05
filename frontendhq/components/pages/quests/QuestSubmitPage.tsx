@@ -11,9 +11,10 @@ const steps = ['Project Info', 'Links & Files', 'Demo', 'Review'];
 export function QuestSubmitPage() {
   const navigate = useNavigate();
   const { id } = useParams();
+  const routeQuestId = Array.isArray(id) ? id[0] : id;
   const [questList, setQuestList] = useState<QuestView[]>([]);
   const [teamMembers, setTeamMembers] = useState<Array<{ id: string; displayName: string }>>([]);
-  const quest = questList.find(q => q.id === id) || questList[0] || {
+  const quest = questList.find(q => q.id === routeQuestId) || questList[0] || {
     id: 'quest',
     title: 'Quest',
     category: 'Building',
@@ -72,7 +73,7 @@ export function QuestSubmitPage() {
     setSubmitting(true);
     setSubmitError(null);
 
-    const questId = id || quest.id;
+    const questId = routeQuestId || quest.id;
     const result = await HackquestService.completeQuestForCurrentWallet(questId);
 
     if (!result) {
@@ -108,7 +109,7 @@ export function QuestSubmitPage() {
   return (
     <div style={{ fontFamily: fonts.outfit, maxWidth: '740px', margin: '0 auto' }}>
       {/* Back */}
-      <button onClick={() => navigate(`/quests/${id}`)} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', padding: 0, marginBottom: '24px' }}>
+      <button onClick={() => navigate(`/quests/${routeQuestId || quest.id}`)} style={{ background: 'none', border: 'none', color: colors.textMuted, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '14px', padding: 0, marginBottom: '24px' }}>
         <ChevronLeft size={16} /> Back to Quest
       </button>
 

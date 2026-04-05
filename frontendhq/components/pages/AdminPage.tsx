@@ -6,6 +6,7 @@ import { LayoutDashboard, Zap, FileText, Award, Trophy, Users, Settings, CheckCi
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { colors, fonts } from '@/lib/design-tokens';
 import { HackquestService, type AdminUserInfo, type LeaderboardView, type QuestView } from '@/lib/services/hackquest.service';
+import { OnChainCounterPanel } from '@/components/pages/OnChainCounterPanel';
 
 const adminNavItems = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -249,6 +250,13 @@ export function AdminPage() {
                 <button onClick={handleRecordDemoXp} style={{ height: '44px', backgroundColor: colors.purple500, color: '#fff', borderRadius: '10px', border: 'none', fontFamily: fonts.outfit, fontSize: '14px', fontWeight: 700, cursor: 'pointer', padding: '0 20px' }}>Record +25 XP</button>
                 <button style={{ height: '44px', backgroundColor: 'transparent', color: colors.textPrimary, borderRadius: '10px', border: `1px solid ${colors.borderDefault}`, fontFamily: fonts.outfit, fontSize: '14px', cursor: 'pointer', padding: '0 20px' }}>Broadcast Message</button>
                 <button style={{ height: '44px', backgroundColor: 'transparent', color: colors.red500, borderRadius: '10px', border: 'rgba(255,68,68,0.3) 1px solid', fontFamily: fonts.outfit, fontSize: '14px', cursor: 'pointer', padding: '0 20px' }}>Pause Event</button>
+              </div>
+
+              <div style={{ marginTop: '16px' }}>
+                <OnChainCounterPanel
+                  title="Admin Counter Controls"
+                  subtitle="Use wallet-signed TestNet deploy/increment actions while reviewing user and event operations."
+                />
               </div>
 
               <div style={{ marginTop: '18px', backgroundColor: colors.bgCard, border: `1px solid ${colors.borderDefault}`, borderRadius: '12px', padding: '14px 16px' }}>

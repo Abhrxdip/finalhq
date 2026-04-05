@@ -134,17 +134,55 @@ const DEMO_ADMIN_EMAIL = "admin.demo@hackquest.io";
 const DEMO_ADMIN_PASSWORD = "DemoAdmin@123";
 const DEMO_ADMIN_USERNAME = "demo_admin";
 const DEMO_ADMIN_DISPLAY_NAME = "Demo Admin";
+const PERA_TESTNET_CHAIN_ID = 416002;
+const COUNTER_GLOBAL_KEY = "COUNT";
+const COUNTER_INCREMENT_ARG = "inc";
+const COUNTER_APPROVAL_TEAL = `#pragma version 8
+txn ApplicationID
+int 0
+==
+bnz init
+
+txna ApplicationArgs 0
+byte "inc"
+==
+bnz increment
+
+int 0
+return
+
+init:
+byte "COUNT"
+int 0
+app_global_put
+int 1
+return
+
+increment:
+byte "COUNT"
+byte "COUNT"
+app_global_get
+int 1
++
+app_global_put
+int 1
+return
+`;
+const COUNTER_CLEAR_TEAL = `#pragma version 8
+int 1
+`;
 
 let memoryAuthSession: AuthSession | null = null;
 let memoryWalletSession: WalletSession | null = null;
 let memoryProfile: UserProfile | null = null;
+let peraConnectorPromise: Promise<any> | null = null;
 
 const defaultProfile: UserProfile = {
   backendUserId: "user_001",
   authUserId: "auth_001",
-  username: "cipher_hawk",
-  displayName: "Cipher Hawk",
-  email: "player@hackquest.dev",
+  username: "arena_rookie",
+  displayName: "Arena Rookie",
+  email: "rookie@hackquest.dev",
   walletAddress: "ALGO7B3XQKF9VPNR2MJLCWTZ4DVXHM8YPWQSEJANKQ5K9XZ",
   className: "Architect",
   level: 12,
@@ -287,7 +325,7 @@ const sampleActivity: ActivityView[] = [
   {
     id: 1,
     type: "quest",
-    player: "Cipher Hawk",
+    player: defaultProfile.displayName,
     avatar: null,
     event: "completed quest",
     detail: "Deploy Smart Contract",
@@ -485,6 +523,120 @@ const sampleAdminDirectory: AdminUserInfo[] = [
     source: "directory",
   },
 ];
+
+function decodeBase64Utf8(value: string) {
+  if (!value || typeof window === "undefined" || typeof window.atob !== "function") {
+    return "";
+  }
+
+  try {
+    const binary = window.atob(value);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return "";
+  }
+}
+
+function getCounterFromAppPayload(payload: unknown) {
+  if (!payload || typeof payload !== "object") {
+    return 0;
+  }
+
+  const params = (payload as GenericRecord).params;
+  if (!params || typeof params !== "object") {
+    return 0;
+  }
+
+  const globalState = (params as GenericRecord)["global-state"];
+  if (!Array.isArray(globalState)) {
+    return 0;
+  }
+
+  for (const item of globalState) {
+    if (!item || typeof item !== "object") {
+      continue;
+    }
+
+    const key = (item as GenericRecord).key;
+    if (typeof key !== "string") {
+      continue;
+    }
+
+    if (decodeBase64Utf8(key) !== COUNTER_GLOBAL_KEY) {
+      continue;
+    }
+
+    const value = (item as GenericRecord).value;
+    if (!value || typeof value !== "object") {
+      return 0;
+    }
+
+    const uintValue = Number((value as GenericRecord).uint ?? 0);
+    return Number.isFinite(uintValue) ? uintValue : 0;
+  }
+
+  return 0;
+}
+
+function getAlgodConfigFromEnv() {
+  const server = process.env.NEXT_PUBLIC_ALGOD_SERVER || "https://testnet-api.algonode.cloud";
+  const token = process.env.NEXT_PUBLIC_ALGOD_TOKEN || "";
+  const rawPort = process.env.NEXT_PUBLIC_ALGOD_PORT || "";
+  const numericPort = Number(rawPort);
+  const port = rawPort === "" ? "" : Number.isFinite(numericPort) ? numericPort : rawPort;
+
+  return { server, token, port };
+}
+
+async function getAlgodContext() {
+  const algosdk = await import("algosdk");
+  const config = getAlgodConfigFromEnv();
+  const algodClient = new algosdk.Algodv2(config.token, config.server, config.port);
+  return { algosdk, algodClient };
+}
+
+async function getPeraConnector() {
+  if (typeof window === "undefined") {
+    throw new Error("Wallet provider is only available in browser context.");
+  }
+
+  if (!peraConnectorPromise) {
+    peraConnectorPromise = import("@perawallet/connect").then((module) => {
+      const PeraWalletConnect = module.PeraWalletConnect;
+      return new PeraWalletConnect({ chainId: PERA_TESTNET_CHAIN_ID });
+    });
+  }
+
+  return peraConnectorPromise;
+}
+
+function normalizeWalletProviderName(walletProvider: string | null) {
+  if (!walletProvider) {
+    return null;
+  }
+
+  if (walletProvider.toLowerCase() === "pera") {
+    return "Pera Wallet";
+  }
+
+  return walletProvider;
+}
+
+async function getConnectedPeraAddress() {
+  const connector = await getPeraConnector();
+  const reconnected = await connector.reconnectSession().catch(() => [] as string[]);
+  if (Array.isArray(reconnected) && reconnected.length > 0) {
+    return reconnected[0];
+  }
+
+  const connected = await connector.connect();
+  if (!Array.isArray(connected) || connected.length === 0) {
+    return null;
+  }
+
+  return connected[0];
+}
 
 function canUseStorage() {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
@@ -724,12 +876,50 @@ export const HackquestService = {
       return;
     }
 
-    setWalletSession({ walletAddress, walletProvider });
+    setWalletSession({ walletAddress, walletProvider: normalizeWalletProviderName(walletProvider) });
     updateProfile({ walletAddress });
   },
 
   clearWalletSession() {
     setWalletSession(null);
+  },
+
+  async connectWalletProvider(walletProvider: string) {
+    if (!walletProvider) {
+      return null;
+    }
+
+    const provider = walletProvider.toLowerCase();
+    if (provider !== "pera") {
+      return null;
+    }
+
+    try {
+      const address = await getConnectedPeraAddress();
+      if (!address) {
+        return null;
+      }
+
+      this.persistWalletSession(address, "Pera Wallet");
+      return {
+        walletAddress: address,
+        walletProvider: "Pera Wallet",
+        network: "testnet",
+      };
+    } catch {
+      return null;
+    }
+  },
+
+  async disconnectWalletProvider() {
+    try {
+      const connector = await getPeraConnector();
+      await connector.disconnect();
+    } catch {
+      // Ignore disconnection failures and still clear local wallet state.
+    }
+
+    this.clearWalletSession();
   },
 
   getCurrentWalletAddress() {
@@ -894,7 +1084,7 @@ export const HackquestService = {
     return {
       result: {
         wallet: walletAddress,
-        network: "Mainnet",
+        network: "testnet",
         assets: [
           { assetId: 101, amount: 1 },
           { assetId: 102, amount: 2 },
@@ -979,6 +1169,25 @@ export const HackquestService = {
       return null;
     }
 
+    try {
+      const { algodClient } = await getAlgodContext();
+      const pending = (await algodClient.pendingTransactionInformation(txId).do()) as unknown as GenericRecord;
+      const confirmedRound = Number(pending["confirmed-round"] ?? 0);
+      const poolError = String(pending["pool-error"] ?? "");
+
+      return {
+        result: {
+          txId,
+          confirmed: confirmedRound > 0,
+          confirmedRound,
+          poolError,
+          network: "testnet",
+        },
+      };
+    } catch {
+      // Fall back to deterministic mock response for offline/demo environments.
+    }
+
     return {
       result: {
         txId,
@@ -986,6 +1195,169 @@ export const HackquestService = {
         confirmedRound: 43124567,
       },
     };
+  },
+
+  async deployCounterContract(payload?: { senderAddress?: string }) {
+    const senderAddress = (payload?.senderAddress || this.getCurrentWalletAddress() || "").trim();
+    if (!senderAddress) {
+      return null;
+    }
+
+    const walletProvider = this.getCurrentWalletProvider();
+    if (walletProvider && !walletProvider.toLowerCase().includes("pera")) {
+      return {
+        result: {
+          error: "Pera Wallet is required for wallet-signed on-chain counter deployment.",
+        },
+      };
+    }
+
+    try {
+      const [{ algosdk, algodClient }, connector] = await Promise.all([
+        getAlgodContext(),
+        getPeraConnector(),
+      ]);
+
+      const [suggestedParams, approvalResponse, clearResponse] = await Promise.all([
+        algodClient.getTransactionParams().do(),
+        algodClient.compile(COUNTER_APPROVAL_TEAL).do(),
+        algodClient.compile(COUNTER_CLEAR_TEAL).do(),
+      ]);
+
+      const approvalProgram = algosdk.base64ToBytes(String((approvalResponse as unknown as GenericRecord).result || ""));
+      const clearProgram = algosdk.base64ToBytes(String((clearResponse as unknown as GenericRecord).result || ""));
+
+      const createTxn = algosdk.makeApplicationCreateTxnFromObject({
+        sender: senderAddress,
+        onComplete: algosdk.OnApplicationComplete.NoOpOC,
+        approvalProgram,
+        clearProgram,
+        numGlobalInts: 1,
+        numGlobalByteSlices: 0,
+        numLocalInts: 0,
+        numLocalByteSlices: 0,
+        suggestedParams,
+      });
+
+      const signed = await connector.signTransaction(
+        [[{ txn: createTxn, signers: [senderAddress], message: "Deploy HackQuest counter contract" }]],
+        senderAddress
+      );
+
+      const submit = (await algodClient.sendRawTransaction(signed).do()) as unknown as GenericRecord;
+      const txId = String(submit.txid || "");
+      const confirmation = (await algosdk.waitForConfirmation(algodClient, txId, 8)) as unknown as GenericRecord;
+      const appId = Number(confirmation["application-index"] ?? 0);
+
+      let counterValue = 0;
+      if (appId > 0) {
+        const appPayload = await algodClient.getApplicationByID(appId).do();
+        counterValue = getCounterFromAppPayload(appPayload);
+      }
+
+      return {
+        result: {
+          txId,
+          appId,
+          counterValue,
+          confirmedRound: Number(confirmation["confirmed-round"] ?? 0),
+          network: "testnet",
+        },
+      };
+    } catch (error) {
+      return {
+        result: {
+          error: String((error as Error).message || error),
+        },
+      };
+    }
+  },
+
+  async incrementCounterContract(payload: { appId: number; senderAddress?: string }) {
+    const appId = Number(payload.appId);
+    const senderAddress = (payload.senderAddress || this.getCurrentWalletAddress() || "").trim();
+
+    if (!Number.isInteger(appId) || appId <= 0 || !senderAddress) {
+      return null;
+    }
+
+    const walletProvider = this.getCurrentWalletProvider();
+    if (walletProvider && !walletProvider.toLowerCase().includes("pera")) {
+      return {
+        result: {
+          error: "Pera Wallet is required for wallet-signed on-chain counter increment.",
+        },
+      };
+    }
+
+    try {
+      const [{ algosdk, algodClient }, connector] = await Promise.all([
+        getAlgodContext(),
+        getPeraConnector(),
+      ]);
+
+      const suggestedParams = await algodClient.getTransactionParams().do();
+      const incrementTxn = algosdk.makeApplicationNoOpTxnFromObject({
+        sender: senderAddress,
+        appIndex: appId,
+        appArgs: [new TextEncoder().encode(COUNTER_INCREMENT_ARG)],
+        suggestedParams,
+      });
+
+      const signed = await connector.signTransaction(
+        [[{ txn: incrementTxn, signers: [senderAddress], message: "Increment HackQuest counter" }]],
+        senderAddress
+      );
+
+      const submit = (await algodClient.sendRawTransaction(signed).do()) as unknown as GenericRecord;
+      const txId = String(submit.txid || "");
+      const confirmation = (await algosdk.waitForConfirmation(algodClient, txId, 8)) as unknown as GenericRecord;
+      const appPayload = await algodClient.getApplicationByID(appId).do();
+      const counterValue = getCounterFromAppPayload(appPayload);
+
+      return {
+        result: {
+          txId,
+          appId,
+          counterValue,
+          confirmedRound: Number(confirmation["confirmed-round"] ?? 0),
+          network: "testnet",
+        },
+      };
+    } catch (error) {
+      return {
+        result: {
+          error: String((error as Error).message || error),
+        },
+      };
+    }
+  },
+
+  async getCounterContractState(appId: number) {
+    const normalizedAppId = Number(appId);
+    if (!Number.isInteger(normalizedAppId) || normalizedAppId <= 0) {
+      return null;
+    }
+
+    try {
+      const { algodClient } = await getAlgodContext();
+      const appPayload = await algodClient.getApplicationByID(normalizedAppId).do();
+      const counterValue = getCounterFromAppPayload(appPayload);
+
+      return {
+        result: {
+          appId: normalizedAppId,
+          counterValue,
+          network: "testnet",
+        },
+      };
+    } catch (error) {
+      return {
+        result: {
+          error: String((error as Error).message || error),
+        },
+      };
+    }
   },
 
   async getHealth() {

@@ -4,7 +4,7 @@ import React from 'react';
 import { NavLink, useLocation } from '@/lib/router-compat';
 import { LogOut } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
-import { appNavItems } from '@/components/layout/navigation';
+import { getAppNavItems } from '@/components/layout/navigation';
 import { HackquestService } from '@/lib/services/hackquest.service';
 
 export function Sidebar() {
@@ -14,6 +14,7 @@ export function Sidebar() {
   const [level, setLevel] = React.useState(1);
   const [rank, setRank] = React.useState(0);
   const [xp, setXp] = React.useState(0);
+  const [profileUsername, setProfileUsername] = React.useState('player');
   const [avatarInitials, setAvatarInitials] = React.useState('PL');
 
   React.useEffect(() => {
@@ -32,6 +33,7 @@ export function Sidebar() {
       setLevel(profile.level);
       setRank(profile.rank);
       setXp(profile.totalXp);
+      setProfileUsername(profile.username || 'player');
 
       const initials = profile.displayName
         .split(' ')
@@ -52,13 +54,17 @@ export function Sidebar() {
   }, []);
 
   const isActive = (path: string, exact?: boolean) => {
+    if (path.startsWith('/profile/')) {
+      return location.pathname.startsWith('/profile/');
+    }
+
     if (exact) return location.pathname === path;
     return location.pathname.startsWith(path);
   };
 
   const visibleNavItems = React.useMemo(
-    () => appNavItems.filter((item) => item.path !== '/admin' || isAdmin),
-    [isAdmin]
+    () => getAppNavItems(profileUsername).filter((item) => item.path !== '/admin' || isAdmin),
+    [isAdmin, profileUsername]
   );
 
   const handleLogout = React.useCallback(async () => {

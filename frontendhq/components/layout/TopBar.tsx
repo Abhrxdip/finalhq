@@ -4,32 +4,19 @@ import React, { useState } from 'react';
 import { Bell, Search, Zap } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { NavLink, useLocation, useNavigate } from '@/lib/router-compat';
-import { appNavItems } from '@/components/layout/navigation';
+import { getAppNavItems } from '@/components/layout/navigation';
 import { HackquestService } from '@/lib/services/hackquest.service';
-
-const topBarNavPaths = [
-  '/dashboard',
-  '/quests',
-  '/event',
-  '/team',
-  '/leaderboard',
-  '/profile/cipher_hawk',
-  '/marketplace',
-  '/activity',
-  '/wallet',
-  '/notifications',
-  '/settings',
-  '/admin',
-];
 
 export function TopBar() {
   const [search, setSearch] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
   const [xp, setXp] = useState(0);
   const [avatarInitials, setAvatarInitials] = useState('PL');
-  const [profilePath, setProfilePath] = useState('/profile/player');
+  const [profileUsername, setProfileUsername] = useState('player');
   const navigate = useNavigate();
   const location = useLocation();
+
+  const profilePath = `/profile/${profileUsername}`;
 
   React.useEffect(() => {
     let active = true;
@@ -44,7 +31,7 @@ export function TopBar() {
       setIsAdmin(session.authUser?.role === 'admin');
 
       setXp(profile.totalXp);
-      setProfilePath(`/profile/${profile.username}`);
+      setProfileUsername(profile.username || 'player');
 
       const initials = profile.displayName
         .split(' ')
@@ -65,11 +52,8 @@ export function TopBar() {
   }, []);
 
   const visibleTopBarItems = React.useMemo(
-    () =>
-      appNavItems.filter(
-        (item) => topBarNavPaths.includes(item.path) && (item.path !== '/admin' || isAdmin)
-      ),
-    [isAdmin]
+    () => getAppNavItems(profileUsername).filter((item) => item.path !== '/admin' || isAdmin),
+    [isAdmin, profileUsername]
   );
 
   const handleLogout = React.useCallback(async () => {

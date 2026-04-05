@@ -198,18 +198,31 @@ export function WalletConnect() {
       return;
     }
 
-    const addr =
-      manualAddress.trim() ||
-      "ALGO7B3XQKF9VPNR2MJLCWTZ4DVXHM8YPWQSEJANKQ5K9XZ";
     const provider = selectedWallet || null;
+    const selectedWalletDetails = WALLETS.find((wallet) => wallet.id === provider);
+    const providerLabel = selectedWalletDetails?.name || provider || null;
+    let addr = manualAddress.trim();
 
     setConnectError(null);
     setIsConnecting(true);
 
-    setWalletAddress(addr);
-    setWalletProvider(provider);
+    if (provider === "pera") {
+      const connection = await HackquestService.connectWalletProvider("pera");
+      if (connection?.walletAddress) {
+        addr = connection.walletAddress;
+      }
+    }
 
-    HackquestService.persistWalletSession(addr, provider);
+    if (!addr) {
+      setConnectError("Wallet address missing. Connect Pera Wallet or paste a valid address.");
+      setIsConnecting(false);
+      return;
+    }
+
+    setWalletAddress(addr);
+    setWalletProvider(providerLabel);
+
+    HackquestService.persistWalletSession(addr, providerLabel);
 
     if (HackquestService.isAuthenticated()) {
       const linked = await HackquestService.linkWallet(addr);
@@ -348,7 +361,7 @@ export function WalletConnect() {
               color: "rgba(255,255,255,0.85)",
             }}
           >
-            Algorand Network
+            Algorand TestNet
           </span>
           <div
             style={{

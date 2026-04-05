@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Copy, ExternalLink, Send, Download, RefreshCw, LogOut } from 'lucide-react';
 import { colors, fonts } from '@/lib/design-tokens';
 import { HackquestService, type MarketplaceItemView, type WalletTransactionView } from '@/lib/services/hackquest.service';
+import { OnChainCounterPanel } from '@/components/pages/OnChainCounterPanel';
 
 const txFilters = ['All', 'XP Rewards', 'NFT Mints', 'Transfers'];
 
@@ -246,7 +247,7 @@ export function WalletPage() {
             <button onClick={handleVerifyLatest} style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '36px', padding: '0 14px', backgroundColor: 'transparent', color: colors.blue500, borderRadius: '8px', border: `1px solid ${colors.blue500}55`, fontFamily: fonts.outfit, fontSize: '12px', cursor: 'pointer' }}>
               <ExternalLink size={12} /> Verify Latest TX
             </button>
-            <button onClick={() => { HackquestService.clearWalletSession(); setWalletAddress(''); setWalletProvider('Wallet disconnected'); }} style={{ background: 'none', border: 'none', color: colors.red500, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <button onClick={async () => { await HackquestService.disconnectWalletProvider(); setWalletAddress(''); setWalletProvider('Wallet disconnected'); }} style={{ background: 'none', border: 'none', color: colors.red500, fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <LogOut size={12} /> Disconnect
             </button>
           </div>
@@ -258,6 +259,11 @@ export function WalletPage() {
           {verificationMessage}
         </div>
       )}
+
+      <OnChainCounterPanel
+        title="User Counter Controls"
+        subtitle="Deploy, increment, and verify your TestNet counter contract using your connected wallet."
+      />
 
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '24px' }}>
